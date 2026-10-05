@@ -2,7 +2,7 @@
 
 **Wallet auth for agent-to-agent communication.**
 
-OAuth proves who you are. API keys prove you have permission. AgentTalk proves what you hold: on-chain, across 37 blockchains, cryptographically signed, verifiable by anyone.
+OAuth proves who you are. API keys prove you have permission. AgentTalk proves what you hold: on-chain, across 34 blockchains, cryptographically signed, verifiable by anyone.
 
 Before two agents exchange data, both verify their wallets satisfy the same conditions. Token balances, NFT ownership, compliance attestations — whatever the use case requires. The blockchain state is the credential. Sell your tokens, lose your session. No secrets to share. No identity to verify first. No static credentials that expire or get leaked.
 
@@ -20,7 +20,7 @@ AgentTalk is [condition-based access](https://insumermodel.com/how-it-works/) fo
 |---|---|---|---|---|
 | Proves what agent holds | Yes | No | No | No |
 | Dynamic (sell token = lose access) | Yes | No | No | No |
-| Multi-chain (37 blockchains) | Yes | No | No | No |
+| Multi-chain (34 blockchains) | Yes | No | No | No |
 | Mutual verification (both sides) | Yes | No | No | Yes |
 | Composable (up to 10 conditions) | Yes | No | No | No |
 | No shared secrets | Yes | No | No | Yes |
@@ -44,7 +44,7 @@ Agent A                          AgentTalk                         Agent B
 ```
 
 0. **Prove control** — Before declaring or joining, an agent signs a one-time challenge with its wallet key. On-chain holdings are public, so naming a wallet proves nothing; the signature proves the wallet is the agent's. Control — not knowledge of the address — grants entry.
-1. **Declare**: Agent A signs its challenge, then sets conditions across any of 37 chains. Its wallet is attested immediately.
+1. **Declare**: Agent A signs its challenge, then sets conditions across any of 34 chains. Its wallet is attested immediately.
 2. **Join** — Agent B signs its own challenge, then joins. Both wallets are evaluated against the same conditions.
 3. **Session** — If both pass, each agent gets an ECDSA-signed JWT (`ES256`, `kid: "insumer-attest-v2"`; resolve the verification key from the JWKS by the token's `kid` rather than pinning it). Both can verify at any time.
 4. **Re-verify** — Any session member can have the session re-attested against current on-chain state, signing its own `reverify` challenge. Only an agent with a signed "not met" is ejected; if a re-attestation cannot be completed, nobody is ejected and the session is left as it was. Dynamic enforcement, not a one-time check.
@@ -155,7 +155,9 @@ Use `"native"` as the `contractAddress` for ETH, BNB, POL, SOL, XRP, BTC, etc. (
 { "type": "eas_attestation", "template": "gitcoin_passport_score" }
 ```
 
-Up to 10 conditions per channel. All must pass (AND logic). 37 blockchains: Ethereum, Bitcoin, Solana, XRP Ledger, Polygon, Base, Arbitrum, Optimism, Avalanche, BNB Chain, and 27 more.
+Up to 10 conditions per channel. All must pass (AND logic). 34 blockchains: 31 EVM chains (Ethereum, Polygon, Base, Arbitrum, Optimism, Avalanche, BNB Chain and 24 more) plus Solana, Sui and Tron.
+
+A condition on Solana, Sui or Tron takes the matching wallet field (`solanaWallet`, `suiWallet`, `tronWallet`) on declare and join. Prove ownership of that wallet first: sign a challenge from `https://skyemeta.com/api/wallet-proof` (family `solana`, `sui` or `tron`; domain `agenttalk`) and pass the token in `walletProofs`. XRP Ledger, Bitcoin and Stellar wallets cannot prove ownership and are not accepted.
 
 ## Verification
 

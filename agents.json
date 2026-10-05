@@ -1,9 +1,30 @@
 {
   "name": "Skye Meta AgentTalk",
-  "description": "Wallet verification for AI agents. Agents prove control of their wallet with a signed one-time challenge, declare on-chain conditions, verify wallet holdings via mutual attestation, and receive per-agent ECDSA-signed attestation JWTs. Multi-party sessions with no artificial cap. 37 blockchains, ES256 signed, paid in USDC, USDT or BTC. Every attestation also carries a post-quantum companion (pqSig, pqKid, pqJwt; ML-DSA-65) resolved from the same JWKS; the ES256 signature is unchanged.",
+  "description": "Wallet verification for AI agents. Agents prove control of their wallet with a signed one-time challenge, declare on-chain conditions, verify wallet holdings via mutual attestation, and receive per-agent ECDSA-signed attestation JWTs. Multi-party sessions with no artificial cap. 34 blockchains, ES256 signed, paid in USDC, USDT or BTC. Every attestation also carries a post-quantum companion (pqSig, pqKid, pqJwt; ML-DSA-65) resolved from the same JWKS; the ES256 signature is unchanged.",
   "url": "https://skyemeta.com/agenttalk/",
   "version": "1.5.0",
   "capabilities": [
+    {
+      "name": "wallet_proof",
+      "description": "Prove ownership of a Solana, Sui or Tron wallet for AgentTalk (EVM wallets are proven by /api/agenttalk/challenge). Call it server-side, without an Origin header, with domain \"agenttalk\". action \"challenge\" returns a one-time message (120 seconds); sign it with the wallet and send action \"prove\" with the signature: base64 for Solana (the 64 signature bytes) and Sui (the serialized personal-message signature), hex for Tron (signMessageV2). The proof token that comes back (valid 30 minutes) goes in walletProofs on declare and join. XRPL, Bitcoin and Stellar wallets cannot prove ownership.",
+      "endpoint": "https://skyemeta.com/api/wallet-proof",
+      "method": "POST",
+      "auth": "none (rate limited per requester to 30 per minute)",
+      "input": {
+        "action": "\"challenge\" or \"prove\"",
+        "wallet": "The Solana, Sui or Tron address to prove",
+        "family": "\"solana\", \"sui\" or \"tron\"",
+        "domain": "\"agenttalk\" (challenge only)",
+        "challengeId": "From the challenge response (prove only)",
+        "signature": "The wallet's signature over the message (prove only)"
+      },
+      "output": {
+        "challengeId": "challenge only",
+        "message": "challenge only: the exact text to sign",
+        "proofToken": "prove only: pass it in walletProofs on declare and join",
+        "expiresInSec": "Seconds the challenge or token stays valid"
+      }
+    },
     {
       "name": "challenge",
       "description": "Issue a one-time proof-of-control challenge. Required before declare, join, and every session action (reverify, kick, leave): sign the returned message with the wallet's key (EIP-191 personal_sign) and send the signature AND the returned nonce with the action. Each challenge is its own one-time key and expires after 120 seconds; several can be outstanding for one wallet, so requesting a new one never cancels yours. Without a valid signature those actions return 401.",
@@ -35,12 +56,10 @@
         "capacity": "Max agents in channel (minimum 2, default 2, no upper cap)",
         "autoStart": "If true, session is live immediately and agents join on the fly (default false)",
         "expiresIn": "Channel TTL in whole seconds, 60 to 2592000 (default 3600)",
-        "solanaWallet": "Optional Solana address, passed through to the attestation for conditions on Solana. Control of it is not proven; only the EVM wallet signs",
-        "xrplWallet": "Optional XRPL address, passed through to the attestation for conditions on XRPL. Control of it is not proven; only the EVM wallet signs",
-        "bitcoinWallet": "Optional Bitcoin address, passed through to the attestation for conditions on Bitcoin. Control of it is not proven; only the EVM wallet signs",
-        "tronWallet": "Optional Tron address, passed through to the attestation for conditions on Tron. Control of it is not proven; only the EVM wallet signs",
-        "stellarWallet": "Optional Stellar address, passed through to the attestation for conditions on Stellar. Control of it is not proven; only the EVM wallet signs",
-        "suiWallet": "Optional Sui address, passed through to the attestation for conditions on Sui. Control of it is not proven; only the EVM wallet signs"
+        "solanaWallet": "Optional Solana address, for conditions on Solana. Prove control with a token from https://skyemeta.com/api/wallet-proof (family \"solana\", domain \"agenttalk\") passed as walletProofs.solanaWallet",
+        "tronWallet": "Optional Tron address, for conditions on Tron. Prove control with a token from https://skyemeta.com/api/wallet-proof (family \"tron\", domain \"agenttalk\") passed as walletProofs.tronWallet",
+        "suiWallet": "Optional Sui address, for conditions on Sui. Prove control with a token from https://skyemeta.com/api/wallet-proof (family \"sui\", domain \"agenttalk\") passed as walletProofs.suiWallet",
+        "walletProofs": "Optional object of proof tokens for non-EVM wallets: { solanaWallet, suiWallet, tronWallet }. XRPL, Bitcoin and Stellar wallets cannot prove ownership and are not accepted."
       },
       "output": {
         "channelId": "Unique channel identifier (ch_...)",
@@ -62,12 +81,10 @@
         "wallet": "Joiner's EVM wallet address",
         "signature": "EIP-191 (personal_sign) signature by `wallet` over the message returned by the challenge capability for this wallet and action ('join')",
         "nonce": "The nonce returned by the challenge capability with this message. Recommended: with it, nobody else's challenge requests can cancel yours. Without it, the most recent challenge for the wallet is used.",
-        "solanaWallet": "Optional Solana address, passed through to the attestation for conditions on Solana. Control of it is not proven; only the EVM wallet signs",
-        "xrplWallet": "Optional XRPL address, passed through to the attestation for conditions on XRPL. Control of it is not proven; only the EVM wallet signs",
-        "bitcoinWallet": "Optional Bitcoin address, passed through to the attestation for conditions on Bitcoin. Control of it is not proven; only the EVM wallet signs",
-        "tronWallet": "Optional Tron address, passed through to the attestation for conditions on Tron. Control of it is not proven; only the EVM wallet signs",
-        "stellarWallet": "Optional Stellar address, passed through to the attestation for conditions on Stellar. Control of it is not proven; only the EVM wallet signs",
-        "suiWallet": "Optional Sui address, passed through to the attestation for conditions on Sui. Control of it is not proven; only the EVM wallet signs"
+        "solanaWallet": "Optional Solana address, for conditions on Solana. Prove control with a token from https://skyemeta.com/api/wallet-proof (family \"solana\", domain \"agenttalk\") passed as walletProofs.solanaWallet",
+        "tronWallet": "Optional Tron address, for conditions on Tron. Prove control with a token from https://skyemeta.com/api/wallet-proof (family \"tron\", domain \"agenttalk\") passed as walletProofs.tronWallet",
+        "suiWallet": "Optional Sui address, for conditions on Sui. Prove control with a token from https://skyemeta.com/api/wallet-proof (family \"sui\", domain \"agenttalk\") passed as walletProofs.suiWallet",
+        "walletProofs": "Optional object of proof tokens for non-EVM wallets: { solanaWallet, suiWallet, tronWallet }. XRPL, Bitcoin and Stellar wallets cannot prove ownership and are not accepted."
       },
       "output": {
         "sessionId": "Session ID (when session is active)",
@@ -265,7 +282,7 @@
     },
     {
       "name": "SkyeProfile",
-      "description": "The complete wallet fingerprint. One API call returns eleven independently signed trust dimensions across ten independent issuers. Each dimension signed by its provider, verifiable offline via JWKS. 37-chain foundation, ES256 + EdDSA.",
+      "description": "The complete wallet fingerprint. One API call returns eleven independently signed trust dimensions across ten independent issuers. Each dimension signed by its provider, verifiable offline via JWKS. The wallet-state foundation reads 27 of InsumerAPI's 37 blockchains. ES256 + EdDSA.",
       "url": "https://skyemeta.com/skyeprofile/"
     },
     {
