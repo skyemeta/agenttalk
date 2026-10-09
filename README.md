@@ -4,17 +4,17 @@
 
 OAuth proves who you are. API keys prove you have permission. AgentTalk proves what you hold: on-chain, across 34 blockchains, cryptographically signed, verifiable by anyone.
 
-Before two agents exchange data, both verify their wallets satisfy the same conditions. Token balances, NFT ownership, compliance attestations — whatever the use case requires. The blockchain state is the credential. Sell your tokens, lose your session. No secrets to share. No identity to verify first. No static credentials that expire or get leaked.
+Before two agents exchange data, both verify their wallets satisfy the same conditions. Token balances, NFT ownership, compliance attestations, whatever the use case requires. The blockchain state is the credential. Sell your tokens, lose your session. No secrets to share. No identity to verify first. No static credentials that expire or get leaked.
 
-A signed challenge and a call per agent to a mutual session. [Try it free](https://skyemeta.com/agenttalk/) — 10 calls per wallet, no signup.
+A signed challenge and a call per agent to a mutual session. [Try it free](https://skyemeta.com/agenttalk/): 10 calls per wallet, no signup.
 
 ## Why Not OAuth?
 
-Agent protocols today authenticate agents the same way we authenticate humans: API keys, OAuth tokens, mTLS certificates. These prove *identity* — "this agent has permission to be here."
+Agent protocols today authenticate agents the same way we authenticate humans: API keys, OAuth tokens, mTLS certificates. These prove *identity*: "this agent has permission to be here."
 
-But for agent commerce, DeFi coordination, and governance workflows, the question isn't who you are. It's **what you hold**. A procurement agent negotiating a $1M deal should prove it represents a wallet with $1M — not just that it has a valid OAuth token.
+But for agent commerce, DeFi coordination, and governance workflows, the question isn't who you are. It's **what you hold**. A procurement agent negotiating a $1M deal should prove it represents a wallet with $1M, not just that it has a valid OAuth token.
 
-AgentTalk is [condition-based access](https://insumermodel.com/how-it-works/) for the agent layer. You define conditions. Both agents are evaluated against live blockchain state. The result is an ECDSA-signed boolean — pass or fail — not a balance dump. The signed attestation is verifiable offline via [JWKS](https://insumermodel.com/.well-known/jwks.json). No callback to us required.
+AgentTalk is [condition-based access](https://insumermodel.com/how-it-works/) for the agent layer. You define conditions. Both agents are evaluated against live blockchain state. The result is an ECDSA-signed boolean: pass or fail, not a balance dump. The signed attestation is verifiable offline via [JWKS](https://insumermodel.com/.well-known/jwks.json). No callback to us required.
 
 | | AgentTalk | OAuth 2.0 | API Keys | mTLS |
 |---|---|---|---|---|
@@ -43,16 +43,16 @@ Agent A                          AgentTalk                         Agent B
    |<-- { valid: true, agents } ----|                                |
 ```
 
-0. **Prove control** — Before declaring or joining, an agent signs a one-time challenge with its wallet key. On-chain holdings are public, so naming a wallet proves nothing; the signature proves the wallet is the agent's. Control — not knowledge of the address — grants entry.
+0. **Prove control**: Before declaring or joining, an agent signs a one-time challenge with its wallet key. On-chain holdings are public, so naming a wallet proves nothing; the signature proves the wallet is the agent's. Control, not knowledge of the address, grants entry.
 1. **Declare**: Agent A signs its challenge, then sets conditions across any of 34 chains. Its wallet is attested immediately.
-2. **Join** — Agent B signs its own challenge, then joins. Both wallets are evaluated against the same conditions.
-3. **Session** — If both pass, each agent gets an ECDSA-signed JWT (`ES256`, `kid: "insumer-attest-v2"`; resolve the verification key from the JWKS by the token's `kid` rather than pinning it). Both can verify at any time.
-4. **Re-verify** — Any session member can have the session re-attested against current on-chain state, signing its own `reverify` challenge. Only an agent with a signed "not met" is ejected; if a re-attestation cannot be completed, nobody is ejected and the session is left as it was. Dynamic enforcement, not a one-time check.
+2. **Join**: Agent B signs its own challenge, then joins. Both wallets are evaluated against the same conditions.
+3. **Session**: If both pass, each agent gets an ECDSA-signed JWT (`ES256`, `kid: "insumer-attest-v2"`; resolve the verification key from the JWKS by the token's `kid` rather than pinning it). Both can verify at any time.
+4. **Re-verify**: Any session member can have the session re-attested against current on-chain state, signing its own `reverify` challenge. Only an agent with a signed "not met" is ejected; if a re-attestation cannot be completed, nobody is ejected and the session is left as it was. Dynamic enforcement, not a one-time check.
 
 ## Quick Start
 
 For a runnable end-to-end script (keypair generation + signing handled for you),
-see [`examples/`](examples/) — `session.js`, `session.py`, or `session.sh`.
+see [`examples/`](examples/): `session.js`, `session.py`, or `session.sh`.
 
 ```bash
 # 1. Prove control of Agent A's wallet
@@ -64,7 +64,7 @@ curl -X POST https://skyemeta.com/api/agenttalk/challenge \
 # Each challenge is its own one-time key, so nobody else's requests can cancel yours. e.g. with foundry:
 #   cast wallet sign --private-key $PK "$message"
 
-# 2. Declare conditions, passing the signature (free tier — no API key needed)
+# 2. Declare conditions, passing the signature (free tier, no API key needed)
 curl -X POST https://skyemeta.com/api/agenttalk/declare \
   -H "Content-Type: application/json" \
   -d '{
@@ -84,8 +84,8 @@ curl -X POST https://skyemeta.com/api/agenttalk/declare \
   }'
 # Returns: { "channelId": "ch_...", "conditionsHash": "0x...", "expiresAt": "..." }
 
-# 3. Join — Agent B proves control of its own wallet first (challenge with action "join"),
-#    then joins (no API key — creator pays both sides)
+# 3. Join: Agent B proves control of its own wallet first (challenge with action "join"),
+#    then joins (no API key; creator pays both sides)
 curl -X POST https://skyemeta.com/api/agenttalk/join \
   -H "Content-Type: application/json" \
   -d '{ "channelId": "ch_...", "wallet": "0xAgentB...", "signature": "0x...", "nonce": "..." }'
@@ -95,7 +95,7 @@ curl -X POST https://skyemeta.com/api/agenttalk/join \
 curl "https://skyemeta.com/api/agenttalk/session?id=ses_..."
 # Returns: { "valid": true, "agents": [...], "conditions": [...] }
 
-# 5. Re-verify — a session member signs a challenge with action "reverify", then:
+# 5. Re-verify: a session member signs a challenge with action "reverify", then:
 curl -X POST https://skyemeta.com/api/agenttalk/session \
   -H "Content-Type: application/json" \
   -d '{ "action": "reverify", "sessionId": "ses_...", "wallet": "0xAgentA...", "signature": "0x...", "nonce": "..." }'
@@ -128,16 +128,16 @@ See [`examples/`](examples/) for complete scripts in bash, Python, and JavaScrip
 
 ## Use Cases
 
-- **Supply Chain Negotiation** — Two procurement agents verify they each hold $1M+ USDC before sharing pricing data. On-chain proof of financial capacity, not a signed NDA.
-- **Financial Agent Coordination** — A portfolio agent only shares allocation data with agents holding specific governance tokens. Attestation replaces allow-lists.
-- **Compliance-Gated Data Exchange** — Agents verify each other holds an on-chain compliance attestation (an EAS attestation such as Coinbase Verified Account). Revoke the attestation, and the next re-verify ejects the agent.
-- **Cross-Org Workflow Automation** — DAO-to-DAO agents verify governance token holdings before executing joint proposals. On-chain qualification replaces manual approval chains.
+- **Supply Chain Negotiation**: Two procurement agents verify they each hold $1M+ USDC before sharing pricing data. On-chain proof of financial capacity, not a signed NDA.
+- **Financial Agent Coordination**: A portfolio agent only shares allocation data with agents holding specific governance tokens. Attestation replaces allow-lists.
+- **Compliance-Gated Data Exchange**: Agents verify each other holds an on-chain compliance attestation (an EAS attestation such as Coinbase Verified Account). Revoke the attestation, and the next re-verify ejects the agent.
+- **Cross-Org Workflow Automation**: DAO-to-DAO agents verify governance token holdings before executing joint proposals. On-chain qualification replaces manual approval chains.
 
 ## Condition Types
 
 Conditions are evaluated by [InsumerAPI](https://insumermodel.com/developers/api-reference/) against live blockchain state.
 
-**`token_balance`** — Does the wallet hold at least X tokens?
+**`token_balance`**: Does the wallet hold at least X tokens?
 ```json
 { "type": "token_balance", "contractAddress": "0xA0b86991...", "chainId": 1, "threshold": "1000" }
 ```
@@ -145,12 +145,12 @@ Conditions are evaluated by [InsumerAPI](https://insumermodel.com/developers/api
 
 Use `"native"` as the `contractAddress` for ETH, BNB, POL, SOL, XRP, BTC, etc. (`token_balance` only; `nft_ownership` needs the NFT contract address).
 
-**`nft_ownership`** — Does the wallet hold this NFT?
+**`nft_ownership`**: Does the wallet hold this NFT?
 ```json
 { "type": "nft_ownership", "contractAddress": "0xBC4CA0Ed...", "chainId": 1 }
 ```
 
-**`eas_attestation`** — Does the wallet have a valid on-chain attestation?
+**`eas_attestation`**: Does the wallet have a valid on-chain attestation?
 ```json
 { "type": "eas_attestation", "template": "gitcoin_passport_score" }
 ```
@@ -161,7 +161,7 @@ A condition on Solana, Sui or Tron takes the matching wallet field (`solanaWalle
 
 ## Verification
 
-Every attestation is an ES256 JWT. Read the token's `kid` and resolve the matching key from the JWKS (AgentTalk sessions sign under `insumer-attest-v2`, like every key minted today; never pin the literal, kids rotate). Verify offline — no network call needed after the initial attestation:
+Every attestation is an ES256 JWT. Read the token's `kid` and resolve the matching key from the JWKS (AgentTalk sessions sign under `insumer-attest-v2`, like every key minted today; never pin the literal, kids rotate). Verify offline, with no network call needed after the initial attestation:
 
 ```
 GET https://insumermodel.com/.well-known/jwks.json
@@ -206,17 +206,17 @@ Pay with USDC or USDT on Ethereum, Polygon, Arbitrum, Optimism, Avalanche, BNB C
 
 AgentTalk implements wallet auth as the qualification layer for agent communication protocols:
 
-- **A2A** — Wallet qualification for agent discovery and Agent Cards
-- **MCP** — Condition-based tool gating via MCP parameters
-- **ACP** — Wallet attestation as the agent handshake layer
-- **x402** — Proof-of-holdings alongside proof-of-payment
+- **A2A**: Wallet qualification for agent discovery and Agent Cards
+- **MCP**: Condition-based tool gating via MCP parameters
+- **ACP**: Wallet attestation as the agent handshake layer
+- **x402**: Proof-of-holdings alongside proof-of-payment
 
 ## Related
 
-- [InsumerAPI](https://insumermodel.com/developers/) — The wallet auth engine. Read the chain, evaluate conditions, sign the result.
-- [insumer-verify](https://www.npmjs.com/package/insumer-verify) — Offline JWT verification. Zero dependencies.
-- [SkyeGate](https://skyemeta.com/skyegate/) — Condition-based access for WordPress
-- [SkyeWoo](https://skyemeta.com/skyewoo/) — Condition-based access for WooCommerce
+- [InsumerAPI](https://insumermodel.com/developers/): The condition-based access API. Read the chain, evaluate conditions, sign the result.
+- [insumer-verify](https://www.npmjs.com/package/insumer-verify): Offline JWT verification. Zero dependencies.
+- [SkyeGate](https://skyemeta.com/skyegate/): Condition-based access for WordPress
+- [SkyeWoo](https://skyemeta.com/skyewoo/): Condition-based access for WooCommerce
 
 ## License
 
