@@ -272,7 +272,7 @@
       "description": "Free, MIT-licensed npm SDK for adding wallet authentication to any Node API. Either-or middleware: API-key customers keep working unchanged while agent customers authenticate with a wallet signature. The open-source primitive that pairs with Skye Meta's managed products.",
       "url": "https://skyemeta.com/access/",
       "npm": "https://www.npmjs.com/package/@skyemeta/access",
-      "source": "https://github.com/douglasborthwick-crypto/skyemeta-access",
+      "source": "https://github.com/skyemeta/skyemeta-access",
       "license": "MIT"
     },
     {
