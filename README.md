@@ -56,7 +56,7 @@ see [`examples/`](examples/): `session.js`, `session.py`, or `session.sh`.
 
 ```bash
 # 1. Prove control of Agent A's wallet
-curl -X POST https://skyemeta.com/api/agenttalk/challenge \
+curl -X POST https://agenttalk.skyemeta.com/api/agenttalk/challenge \
   -H "Content-Type: application/json" \
   -d '{ "wallet": "0xAgentA...", "action": "declare" }'
 # Returns: { "message": "AgentTalk proof-of-control\n...", "nonce": "...", "expiresInSec": 120 }
@@ -65,7 +65,7 @@ curl -X POST https://skyemeta.com/api/agenttalk/challenge \
 #   cast wallet sign --private-key $PK "$message"
 
 # 2. Declare conditions, passing the signature (free tier, no API key needed)
-curl -X POST https://skyemeta.com/api/agenttalk/declare \
+curl -X POST https://agenttalk.skyemeta.com/api/agenttalk/declare \
   -H "Content-Type: application/json" \
   -d '{
     "wallet": "0xAgentA...",
@@ -86,17 +86,17 @@ curl -X POST https://skyemeta.com/api/agenttalk/declare \
 
 # 3. Join: Agent B proves control of its own wallet first (challenge with action "join"),
 #    then joins (no API key; creator pays both sides)
-curl -X POST https://skyemeta.com/api/agenttalk/join \
+curl -X POST https://agenttalk.skyemeta.com/api/agenttalk/join \
   -H "Content-Type: application/json" \
   -d '{ "channelId": "ch_...", "wallet": "0xAgentB...", "signature": "0x...", "nonce": "..." }'
 # Returns: { "sessionId": "ses_...", "agents": [{ wallet, attestation }, ...] }
 
 # 4. Verify
-curl "https://skyemeta.com/api/agenttalk/session?id=ses_..."
+curl "https://agenttalk.skyemeta.com/api/agenttalk/session?id=ses_..."
 # Returns: { "valid": true, "agents": [...], "conditions": [...] }
 
 # 5. Re-verify: a session member signs a challenge with action "reverify", then:
-curl -X POST https://skyemeta.com/api/agenttalk/session \
+curl -X POST https://agenttalk.skyemeta.com/api/agenttalk/session \
   -H "Content-Type: application/json" \
   -d '{ "action": "reverify", "sessionId": "ses_...", "wallet": "0xAgentA...", "signature": "0x...", "nonce": "..." }'
 # Returns: { "valid": true, "agents": [...fresh attestations], "ejected": [...] }
@@ -143,7 +143,7 @@ Conditions are evaluated by [InsumerAPI](https://insumermodel.com/developers/api
 ```
 `threshold` is in token (display) units, as a decimal string: `"1000"` means 1000 USDC, and a $1M floor is `"1000000"`. Leave `decimals` out: the token's own decimals are always read from the chain. If sent it is only a cross-check, and a value that differs from the token's own decimals is rejected.
 
-Use `"native"` as the `contractAddress` for ETH, BNB, POL, SOL, XRP, BTC, etc. (`token_balance` only; `nft_ownership` needs the NFT contract address).
+Use `"native"` as the `contractAddress` for ETH, BNB, POL, SOL, etc. (`token_balance` only; `nft_ownership` needs the NFT contract address).
 
 **`nft_ownership`**: Does the wallet hold this NFT?
 ```json
@@ -157,7 +157,7 @@ Use `"native"` as the `contractAddress` for ETH, BNB, POL, SOL, XRP, BTC, etc. (
 
 Up to 10 conditions per channel. All must pass (AND logic). 34 blockchains: 31 EVM chains (Ethereum, Polygon, Base, Arbitrum, Optimism, Avalanche, BNB Chain and 24 more) plus Solana, Sui and Tron.
 
-A condition on Solana, Sui or Tron takes the matching wallet field (`solanaWallet`, `suiWallet`, `tronWallet`) on declare and join. Prove ownership of that wallet first: sign a challenge from `https://skyemeta.com/api/wallet-proof` (family `solana`, `sui` or `tron`; domain `agenttalk`) and pass the token in `walletProofs`. XRP Ledger, Bitcoin and Stellar wallets cannot prove ownership and are not accepted.
+A condition on Solana, Sui or Tron takes the matching wallet field (`solanaWallet`, `suiWallet`, `tronWallet`) on declare and join. Prove ownership of that wallet first: sign a challenge from `https://agenttalk.skyemeta.com/api/wallet-proof` (family `solana`, `sui` or `tron`; domain `agenttalk`) and pass the token in `walletProofs`. XRP Ledger, Bitcoin and Stellar wallets cannot prove ownership and are not accepted.
 
 ## Verification
 
@@ -167,7 +167,7 @@ Every attestation is an ES256 JWT. Read the token's `kid` and resolve the matchi
 GET https://insumermodel.com/.well-known/jwks.json
 ```
 
-Each attestation also carries a post-quantum companion (`pqSig`, `pqKid`, and `pqJwt` beside `jwt`; ML-DSA-65), resolved from the same JWKS. The ES256 signature is unchanged.
+Each attestation is signed twice: ES256 and a post-quantum ML-DSA-65 signature (`pqSig`, `pqKid`, and `pqJwt` beside `jwt`), resolved from the same JWKS.
 
 Works with any standard JWT library: jose, jsonwebtoken, Kong, Nginx, AWS API Gateway. Each condition produces a `conditionHash` (SHA-256 of canonical JSON), so verifiers can confirm exactly which conditions were checked without seeing raw balances.
 
@@ -182,7 +182,7 @@ Works with any standard JWT library: jose, jsonwebtoken, Kong, Nginx, AWS API Ga
 | `/api/agenttalk/session` | POST | Signed challenge from a session member (1 credit per agent, paid per the channel's `reverifyPolicy`) | Re-verify every agent against current state; also `kick` (signed by the creator) and `leave` |
 | `/api/agenttalk/buy-key` | POST | The payment transaction | Add credits to the wallet that paid; no key is issued |
 
-Full request/response details: [skyemeta.com/agenttalk](https://skyemeta.com/agenttalk/)
+Full request/response details: [agenttalk.skyemeta.com/llms-full.txt](https://agenttalk.skyemeta.com/llms-full.txt) (the whole API in one file) and [skyemeta.com/agenttalk](https://skyemeta.com/agenttalk/)
 
 ## Discovery
 
@@ -200,7 +200,7 @@ GET https://skyemeta.com/.well-known/agents.json
 
 Each session = 2 credits (one per agent). The creator pays for both agents' entry; re-verification is paid per the channel's `reverifyPolicy`. **Free tier: 10 calls per wallet, no key needed.**
 
-Pay with USDC on Ethereum, Base, Polygon, Arbitrum, Optimism, Avalanche or Solana, or with BTC; the minimum is $5. The payment addresses are on [skyemeta.com/agenttalk](https://skyemeta.com/agenttalk/#buy-key). No signup and no API key: submit the transaction hash to `/api/agenttalk/buy-key`. Credits are spent by the EVM wallet that creates channels. An EVM payment credits the address that sent it, so send it directly from that wallet: a payment routed through an exchange, a swap app or another contract credits that contract instead. Paying from Solana or Bitcoin, name that 0x wallet inside the payment: a memo on the Solana transfer, or an `OP_RETURN` output on the Bitcoin transaction (the address as text, or its 20 raw bytes). Only the payer can put it there, so nobody can redirect the purchase. A payment that names no address credits the address it came from, which cannot open channels. The response says which it did: `creditedBy` is `memo` or `sender`. See [skyemeta.com/agenttalk](https://skyemeta.com/agenttalk/) for details.
+Pay with USDC on Ethereum, Base, Polygon, Arbitrum, Optimism, Avalanche or Solana (Bitcoin is not accepted); the minimum is $5. An EVM payment is credited once it is a few blocks deep, usually within a minute. The payment addresses are on [skyemeta.com/agenttalk](https://skyemeta.com/agenttalk/#buy-key). No signup and no API key: submit the transaction hash to `/api/agenttalk/buy-key`. Credits are spent by the EVM wallet that creates channels. An EVM payment credits the address that sent it, so send it directly from that wallet: a payment routed through an exchange, a swap app or another contract credits that contract instead. Paying from Solana, name that 0x wallet inside the payment, in a memo on the transfer. Only the payer can put it there, so nobody can redirect the purchase. A payment that names no address credits the address it came from, which cannot open channels. The response says which it did: `creditedBy` is `memo` or `sender`. See [skyemeta.com/agenttalk](https://skyemeta.com/agenttalk/) for details.
 
 ### Or pay per call with x402
 

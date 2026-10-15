@@ -1,13 +1,13 @@
 {
   "name": "Skye Meta AgentTalk",
-  "description": "Wallet verification for AI agents. Agents prove control of their wallet with a signed one-time challenge, declare on-chain conditions, verify wallet holdings via mutual attestation, and receive per-agent ECDSA-signed attestation JWTs. Multi-party sessions with no artificial cap. 34 blockchains, ES256 signed, paid in USDC or BTC. Every attestation also carries a post-quantum companion (pqSig, pqKid, pqJwt; ML-DSA-65) resolved from the same JWKS; the ES256 signature is unchanged.",
-  "url": "https://skyemeta.com/agenttalk/",
+  "description": "Wallet verification for AI agents. Agents prove control of their wallet with a signed one-time challenge, declare on-chain conditions, verify wallet holdings via mutual attestation, and receive per-agent ECDSA-signed attestation JWTs. Multi-party sessions with no artificial cap. 34 blockchains, ES256 signed, paid in USDC. Every attestation is signed twice: ES256 and a post-quantum ML-DSA-65 signature (pqSig, pqKid, pqJwt), resolved from the same JWKS.",
+  "url": "https://agenttalk.skyemeta.com/agenttalk/",
   "version": "1.5.0",
   "capabilities": [
     {
       "name": "wallet_proof",
       "description": "Prove ownership of a Solana, Sui or Tron wallet for AgentTalk (EVM wallets are proven by /api/agenttalk/challenge). Call it server-side, without an Origin header, with domain \"agenttalk\". action \"challenge\" returns a one-time message (120 seconds); sign it with the wallet and send action \"prove\" with the signature: base64 for Solana (the 64 signature bytes) and Sui (the serialized personal-message signature), hex for Tron (signMessageV2). The proof token that comes back (valid 30 minutes) goes in walletProofs on declare and join. XRPL, Bitcoin and Stellar wallets cannot prove ownership.",
-      "endpoint": "https://skyemeta.com/api/wallet-proof",
+      "endpoint": "https://agenttalk.skyemeta.com/api/wallet-proof",
       "method": "POST",
       "auth": "none (rate limited per requester)",
       "input": {
@@ -28,7 +28,7 @@
     {
       "name": "challenge",
       "description": "Issue a one-time proof-of-control challenge. Required before declare, join, and every session action (reverify, kick, leave): sign the returned message with the wallet's key (EIP-191 personal_sign) and send the signature AND the returned nonce with the action. Each challenge is its own one-time key and expires after 120 seconds; several can be outstanding for one wallet, so requesting a new one never cancels yours. Without a valid signature those actions return 401.",
-      "endpoint": "https://skyemeta.com/api/agenttalk/challenge",
+      "endpoint": "https://agenttalk.skyemeta.com/api/agenttalk/challenge",
       "method": "POST",
       "auth": "none (rate limited per requester)",
       "input": {
@@ -44,7 +44,7 @@
     {
       "name": "declare",
       "description": "Declare on-chain conditions for a new channel. The creator's wallet is attested against the conditions. Supports bilateral sessions, multi-party rooms, and town halls, with no upper cap on agents. 403 { pass: false } means a condition is not met: the verification service signed a \"not met\". 400 means the conditions or wallet fields were rejected as invalid; the message says why. 503 { ok: false, error: { code: 'upstream_unavailable' } } means no verdict could be obtained: retry later. A 400, 503 or 429 costs nothing: free calls and credits are only spent on a signed answer.",
-      "endpoint": "https://skyemeta.com/api/agenttalk/declare",
+      "endpoint": "https://agenttalk.skyemeta.com/api/agenttalk/declare",
       "method": "POST",
       "auth": "signature from the challenge capability (action 'declare'); no API key. Billing: 10 free calls per creator wallet, then 1 credit per call from credits bought via buy_credits (402 when none remain).",
       "input": {
@@ -73,7 +73,7 @@
     {
       "name": "join",
       "description": "Join an existing channel. The joiner's wallet is attested against the channel's conditions. For autoStart channels, the agent is added to the live session. For standard channels, the session activates when capacity is reached. 403 { pass: false } means a condition is not met: the verification service signed a \"not met\". 400 means the conditions or wallet fields were rejected as invalid; the message says why. 503 { ok: false, error: { code: 'upstream_unavailable' } } means no verdict could be obtained: retry later. A 400, 503 or 429 costs nothing: the creator's free calls and credits are only spent on a signed answer.",
-      "endpoint": "https://skyemeta.com/api/agenttalk/join",
+      "endpoint": "https://agenttalk.skyemeta.com/api/agenttalk/join",
       "method": "POST",
       "auth": "signature from the challenge capability (action 'join'); billed to the channel creator (free calls first, then 1 credit)",
       "input": {
@@ -92,14 +92,14 @@
         "agentsJoined": "Current agent count (when waiting)",
         "capacity": "Channel capacity (when waiting)",
         "expiresAt": "ISO 8601 expiration timestamp",
-        "agents": "Array of { wallet, wallets, attestation }; attestation is each agent's full InsumerAPI /v1/attest result: attestation, sig, kid, jwt (ES256), and the ML-DSA-65 post-quantum companion pqSig, pqKid, pqJwt",
+        "agents": "Array of { wallet, wallets, attestation }; attestation is each agent's full InsumerAPI /v1/attest result: attestation, sig, kid, jwt (ES256), and the ML-DSA-65 post-quantum signature pqSig, pqKid, pqJwt",
         "reverifyPolicy": "The channel's re-verify policy (members / creator / requester)"
       }
     },
     {
       "name": "session_verify",
       "description": "Check if a session is still valid.",
-      "endpoint": "https://skyemeta.com/api/agenttalk/session",
+      "endpoint": "https://agenttalk.skyemeta.com/api/agenttalk/session",
       "method": "GET",
       "auth": "none (session lookup is open; stored attestations are JWS-verifiable against the InsumerAPI JWKS)",
       "input": {
@@ -118,7 +118,7 @@
     {
       "name": "session_action",
       "description": "Action-based session management. Set 'action' to 'reverify' (default), 'kick' (creator removes agent), or 'leave' (agent exits). Every action needs a signed challenge for the acting wallet and action. Re-verify costs 1 credit per agent. Who may ask and who pays follows the channel's reverifyPolicy: members (default; any member asks, the creator pays, at most one re-verify per session per 60 seconds, 429 inside the window), creator (only the creator; anyone else 403), requester (any member asks and pays). Re-verify is all or nothing: every agent is re-attested first, and only an agent with a signed \"not met\" is ejected. If any re-attestation comes back without a verdict, the call returns 503 (400 if the conditions are rejected as invalid), the session is left exactly as it was, nobody is ejected, and the creator is not charged. Kick is signed by creatorWallet. If the creator leaves, the channel closes.",
-      "endpoint": "https://skyemeta.com/api/agenttalk/session",
+      "endpoint": "https://agenttalk.skyemeta.com/api/agenttalk/session",
       "method": "POST",
       "auth": "signature from the challenge capability for the acting wallet and action (401 without one); re-verify is billed per the channel's reverifyPolicy",
       "input": {
@@ -143,13 +143,13 @@
     },
     {
       "name": "buy_credits",
-      "description": "Buy AgentTalk credits with USDC or BTC. Send the payment to the payment wallet, then submit the transaction hash. The paid amount is read from the chain; no API key is issued. Credits are spent by the EVM wallet that creates channels. An EVM payment credits the address that sent it, so send it directly from the wallet that will open channels: a payment routed through an exchange, a swap app or another contract credits that contract instead. A Solana or Bitcoin payment can name the EVM wallet to credit inside the payment itself: put the 0x address in a memo on the Solana transfer, or in an OP_RETURN output on the Bitcoin transaction (as text, or as its 20 raw bytes). Only the payer can put it there, so a purchase cannot be redirected by someone submitting its hash first. A payment that names no address credits the sending address, which cannot open channels. A payment that names two different addresses is refused with 400.",
-      "endpoint": "https://skyemeta.com/api/agenttalk/buy-key",
+      "description": "Buy AgentTalk credits with USDC. Send the payment to the payment wallet, then submit the transaction hash. The paid amount is read from the chain; no API key is issued. Credits are spent by the EVM wallet that creates channels. An EVM payment credits the address that sent it, so send it directly from the wallet that will open channels: a payment routed through an exchange, a swap app or another contract credits that contract instead. A Solana payment can name the EVM wallet to credit inside the payment itself: put the 0x address in a memo on the Solana transfer. Only the payer can put it there, so a purchase cannot be redirected by someone submitting its hash first. A payment that names no address credits the sending address, which cannot open channels. A payment that names two different addresses is refused with 400.",
+      "endpoint": "https://agenttalk.skyemeta.com/api/agenttalk/buy-key",
       "method": "POST",
       "auth": "none: the transaction itself is the proof of payment. Each transaction hash can be used once (409 on reuse)",
       "input": {
         "txHash": "Transfer transaction hash",
-        "chainId": "1, 8453, 137, 42161, 10, 43114, 'solana', or 'bitcoin'",
+        "chainId": "1, 8453, 137, 42161, 10, 43114, or 'solana'",
         "appName": "Optional agent/app name"
       },
       "output": {
@@ -164,11 +164,10 @@
     }
   ],
   "payment": {
-    "method": "USDC or BTC credits, or pay per call with x402",
+    "method": "USDC credits, or pay per call with x402",
     "wallets": {
       "evm": "0x40f90BD19B6cEc99661F310a1D6b6442825dF3B9",
-      "solana": "8iw7cTn4yWvUbbsABbdSRuZgED8WC1YjUUT15PRm8QF7",
-      "bitcoin": "3NyrZBQsBYdspT4T2PHEQP15hKEzU7zm5m"
+      "solana": "8iw7cTn4yWvUbbsABbdSRuZgED8WC1YjUUT15PRm8QF7"
     },
     "supported_chains": [
       {
@@ -219,14 +218,6 @@
         "tokens": [
           "USDC"
         ]
-      },
-      {
-        "name": "Bitcoin",
-        "chainId": "bitcoin",
-        "tokens": [
-          "BTC"
-        ],
-        "note": "Confirmed transactions only, valued in USD at the current BTC price"
       }
     ],
     "minimum": "$5 USD (verified on-chain value)",
@@ -245,7 +236,7 @@
       }
     ],
     "free_tier": "10 calls per creator wallet, no key or signup required. The wallet is your identity; each call is proven with a signed challenge.",
-    "naming_the_wallet": "Solana and Bitcoin payments: name the EVM wallet to credit in the payment (Solana memo, Bitcoin OP_RETURN). Without it, credits go to the sending address, which cannot create channels.",
+    "naming_the_wallet": "Solana payments: name the EVM wallet to credit in the payment, in a memo. Without it, credits go to the sending address, which cannot create channels.",
     "x402": {
       "what": "Pay per call when no free calls or credits are left: the response is HTTP 402 with a quote in the PAYMENT-REQUIRED header; send the same request again with a PAYMENT-SIGNATURE header.",
       "prices": {
@@ -261,7 +252,8 @@
       "asset": "USDC",
       "payTo": "0x40f90BD19B6cEc99661F310a1D6b6442825dF3B9",
       "charged": "only for a signed answer, met or not met; no verdict, no charge"
-    }
+    },
+    "confirmations": "EVM payments are credited once a few blocks deep: Ethereum 6, Base and Optimism 10, Arbitrum 20, Polygon 32, Avalanche 1. An earlier claim is told to retry; nothing is used up."
   },
   "provider": {
     "name": "Skye Meta",
@@ -304,7 +296,7 @@
     },
     {
       "name": "InsumerAPI",
-      "description": "The condition-based access API powering all Skye Meta products. Any condition, any chain across 37 blockchains, ECDSA-signed attestations verifiable offline via JWKS, each carrying an ML-DSA-65 post-quantum companion since September 2026 (five-entry JWKS at https://insumermodel.com/.well-known/jwks.json; key binding at https://insumermodel.com/.well-known/pq-key-binding.json).",
+      "description": "The condition-based access API powering all Skye Meta products. Any condition, any chain across 37 blockchains, ECDSA-signed attestations verifiable offline via JWKS, each also signed with a post-quantum ML-DSA-65 signature since September 2026 (five-entry JWKS at https://insumermodel.com/.well-known/jwks.json; key binding at https://insumermodel.com/.well-known/pq-key-binding.json).",
       "url": "https://insumermodel.com/developers/"
     }
   ],
