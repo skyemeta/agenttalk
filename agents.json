@@ -164,7 +164,7 @@
     }
   ],
   "payment": {
-    "method": "USDC or BTC",
+    "method": "USDC or BTC credits, or pay per call with x402",
     "wallets": {
       "evm": "0x40f90BD19B6cEc99661F310a1D6b6442825dF3B9",
       "solana": "8iw7cTn4yWvUbbsABbdSRuZgED8WC1YjUUT15PRm8QF7",
@@ -245,7 +245,23 @@
       }
     ],
     "free_tier": "10 calls per creator wallet, no key or signup required. The wallet is your identity; each call is proven with a signed challenge.",
-    "naming_the_wallet": "Solana and Bitcoin payments: name the EVM wallet to credit in the payment (Solana memo, Bitcoin OP_RETURN). Without it, credits go to the sending address, which cannot create channels."
+    "naming_the_wallet": "Solana and Bitcoin payments: name the EVM wallet to credit in the payment (Solana memo, Bitcoin OP_RETURN). Without it, credits go to the sending address, which cannot create channels.",
+    "x402": {
+      "what": "Pay per call when no free calls or credits are left: the response is HTTP 402 with a quote in the PAYMENT-REQUIRED header; send the same request again with a PAYMENT-SIGNATURE header.",
+      "prices": {
+        "declare": "$0.50",
+        "join": "$0.15",
+        "reverify": "$0.15 per agent"
+      },
+      "networks": [
+        "eip155:8453",
+        "eip155:137",
+        "eip155:42161"
+      ],
+      "asset": "USDC",
+      "payTo": "0x40f90BD19B6cEc99661F310a1D6b6442825dF3B9",
+      "charged": "only for a signed answer, met or not met; no verdict, no charge"
+    }
   },
   "provider": {
     "name": "Skye Meta",
