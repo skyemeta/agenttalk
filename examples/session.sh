@@ -1,9 +1,12 @@
 #!/usr/bin/env bash
-# AgentTalk — full session flow (prove control → declare → join → verify → re-verify)
+# AgentTalk: full session flow (prove control → declare → join → verify → re-verify)
 #
-# No API key and no signup. The channel creator's wallet gets 10 free calls; after
-# that it needs credits bought with POST /api/agenttalk/buy-key. Declare and every
-# join are billed to the creator, and re-verify costs the creator 1 per agent.
+# No API key and no signup. The channel creator's wallet gets 10 free calls. After
+# that, a call answers HTTP 402 with its price in the PAYMENT-REQUIRED header: any
+# x402 client pays in USDC (Base, Polygon or Arbitrum) and sends it again. Teams can
+# buy credits in advance instead (POST /api/agenttalk/buy-key). Declare and every
+# join are billed to the creator; re-verify costs 1 per agent, paid as the channel's
+# reverifyPolicy says (the creator by default).
 #
 # Proof-of-control: on-chain holdings are public, so before declare, join and
 # re-verify the acting agent fetches a one-time challenge for { wallet, action }
@@ -24,9 +27,9 @@
 
 set -euo pipefail
 
-BASE_URL="https://skyemeta.com/api/agenttalk"
+BASE_URL="https://agenttalk.skyemeta.com/api/agenttalk"
 
-# json_field <json-string> <key> — extract a top-level string/number field.
+# json_field <json-string> <key>: extract a top-level string/number field.
 # Uses printf (not echo) so escaped \n in the JSON is not mangled by the shell.
 json_field() {
   printf '%s' "$1" | python3 -c "import sys,json; print(json.load(sys.stdin).get('$2',''))" 2>/dev/null || true
@@ -34,7 +37,7 @@ json_field() {
 
 pretty() { printf '%s' "$1" | python3 -m json.tool 2>/dev/null || printf '%s\n' "$1"; }
 
-# post_json <path> <json-body> — POST, then set STATUS and BODY.
+# post_json <path> <json-body>: POST, then set STATUS and BODY.
 post_json() {
   local out
   out=$(curl -s -w $'\n%{http_code}' -X POST "$BASE_URL$1" \
@@ -43,9 +46,10 @@ post_json() {
   BODY="${out%$'\n'*}"
 }
 
-# explain_refusal <label> — explain a response that did not admit the agent.
+# explain_refusal <label>: explain a response that did not admit the agent.
 #   401            signature missing, stale or not from this wallet: sign a fresh challenge
-#   402            the channel creator is out of free calls and credits (buy-key)
+#   402            no free calls or credits left: pay with x402 (PAYMENT-REQUIRED header)
+#                or buy credits (buy-key)
 #   400            the conditions or wallet fields were rejected as invalid (see error)
 #   403 pass:false a condition is not met: the verification service signed "not met"
 #   503            no verdict could be obtained: retry later
@@ -62,12 +66,12 @@ explain_refusal() {
     400) echo "Conditions rejected ($1): $(json_field "$BODY" error). Nothing was charged." ;;
     502|503) echo "Verification unavailable ($1). Nothing was charged; retry in a few seconds." ;;
     401) echo "Proof-of-control rejected ($1): $(json_field "$BODY" error). Sign a fresh challenge." ;;
-    402) echo "Out of credits ($1): the channel creator must buy credits via /buy-key." ;;
-    *)   echo "$1 failed with HTTP $STATUS — check the response above." ;;
+    402) echo "Payment needed ($1): pay this call with any x402 client (price in the PAYMENT-REQUIRED header), or buy credits via /buy-key." ;;
+    *)   echo "$1 failed with HTTP $STATUS: check the response above." ;;
   esac
 }
 
-# make_key <ENV_VAR_NAME> [FALLBACK_ENV_VAR] — echo a private key from env, else a
+# make_key <ENV_VAR_NAME> [FALLBACK_ENV_VAR]: echo a private key from env, else a
 # fresh throwaway one.
 make_key() {
   local envval="${!1:-}"
@@ -79,7 +83,7 @@ make_key() {
   fi
 }
 
-# prove_control <address> <private_key> <action> — echo "<signature> <nonce>" for the
+# prove_control <address> <private_key> <action>: echo "<signature> <nonce>" for the
 # one-time challenge for this wallet + action. Send both back: with the nonce, nobody
 # else's challenge requests can cancel yours.
 prove_control() {
@@ -151,7 +155,8 @@ pretty "$(curl -s "$BASE_URL/session?id=$SESSION_ID")"
 
 echo ""
 echo "=== Step 4: Agent A (a session member) proves control + re-verifies ==="
-# Re-attests every agent against current on-chain state; the creator pays 1 per agent.
+# Re-attests every agent against current on-chain state; 1 per agent, paid as the
+# channel's reverifyPolicy says (the creator by default).
 read -r SIG_R NONCE_R <<< "$(prove_control "$ADDR_A" "$PK_A" "reverify")"
 post_json /session "{
     \"action\": \"reverify\",

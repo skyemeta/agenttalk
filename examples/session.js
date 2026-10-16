@@ -1,9 +1,12 @@
 /**
- * AgentTalk — full session flow (prove control → declare → join → verify → re-verify)
+ * AgentTalk: full session flow (prove control → declare → join → verify → re-verify)
  *
- * No API key and no signup. The channel creator's wallet gets 10 free calls; after
- * that it needs credits bought with POST /api/agenttalk/buy-key. Declare and every
- * join are billed to the creator, and re-verify costs the creator 1 per agent.
+ * No API key and no signup. The channel creator's wallet gets 10 free calls. After
+ * that, a call answers HTTP 402 with its price in the PAYMENT-REQUIRED header: any
+ * x402 client pays in USDC (Base, Polygon or Arbitrum) and sends it again. Teams can
+ * buy credits in advance instead (POST /api/agenttalk/buy-key). Declare and every
+ * join are billed to the creator; re-verify costs 1 per agent, paid as the channel's
+ * reverifyPolicy says (the creator by default).
  *
  * Proof-of-control: on-chain holdings are public, so before declare, join and
  * re-verify the acting agent fetches a one-time challenge for { wallet, action }
@@ -25,7 +28,7 @@
 
 import { privateKeyToAccount, generatePrivateKey } from 'viem/accounts';
 
-const BASE_URL = 'https://skyemeta.com/api/agenttalk';
+const BASE_URL = 'https://agenttalk.skyemeta.com/api/agenttalk';
 
 // Fresh throwaway keypairs unless you supply your own funded ones via env.
 const agentA = privateKeyToAccount(process.env.DEMO_PRIVATE_KEY_A || process.env.DEMO_PRIVATE_KEY || generatePrivateKey());
@@ -74,8 +77,8 @@ async function verifySession(sessionId) {
 
 async function reverifySession(sessionId, member) {
   // Re-attests every agent against current on-chain state. It must be requested
-  // by a session member, signing a 'reverify' challenge; the creator pays 1 credit
-  // per agent.
+  // by a session member, signing a 'reverify' challenge; 1 per agent is
+  // paid as the channel's reverifyPolicy says (the creator by default).
   const { signature, nonce } = await proveControl(member, 'reverify');
   return postJson('/session', { action: 'reverify', sessionId, wallet: member.address, signature, nonce });
 }
@@ -83,7 +86,8 @@ async function reverifySession(sessionId, member) {
 // Explain a response that did not admit the agent. Returns nothing; the caller stops.
 //   401          the signature was missing, stale or not from this wallet: request a
 //                fresh challenge and sign again
-//   402          the channel creator is out of free calls and credits (buy-key)
+//   402          no free calls or credits left: pay with x402 (PAYMENT-REQUIRED header)
+//                or buy credits (buy-key)
 //   400          the conditions or wallet fields were rejected as invalid (see error)
 //   403 pass:false  a condition is not met: the verification service signed "not met"
 //   503          no verdict could be obtained: retry later
@@ -99,7 +103,7 @@ function explainRefusal(label, res) {
   } else if (status === 401) {
     console.log(`\nProof-of-control rejected (${label}): ${data.error}. Request a new challenge and sign again.`);
   } else if (status === 402) {
-    console.log(`\nOut of credits (${label}): the channel creator must buy credits via /buy-key.`);
+    console.log(`\nPayment needed (${label}): pay this call with any x402 client (price in the PAYMENT-REQUIRED header), or buy credits via /buy-key.`);
   } else {
     console.log(`\n${label} failed with HTTP ${status}: ${data.error || JSON.stringify(data)}`);
   }

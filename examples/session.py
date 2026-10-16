@@ -1,9 +1,12 @@
 """
-AgentTalk — full session flow (prove control -> declare -> join -> verify -> re-verify)
+AgentTalk: full session flow (prove control -> declare -> join -> verify -> re-verify)
 
-No API key and no signup. The channel creator's wallet gets 10 free calls; after
-that it needs credits bought with POST /api/agenttalk/buy-key. Declare and every
-join are billed to the creator, and re-verify costs the creator 1 per agent.
+No API key and no signup. The channel creator's wallet gets 10 free calls. After
+that, a call answers HTTP 402 with its price in the PAYMENT-REQUIRED header: any
+x402 client pays in USDC (Base, Polygon or Arbitrum) and sends it again. Teams can
+buy credits in advance instead (POST /api/agenttalk/buy-key). Declare and every
+join are billed to the creator; re-verify costs 1 per agent, paid as the channel's
+reverifyPolicy says (the creator by default).
 
 Proof-of-control: on-chain holdings are public, so before declare, join and
 re-verify the acting agent fetches a one-time challenge for { wallet, action }
@@ -33,7 +36,7 @@ import requests
 from eth_account import Account
 from eth_account.messages import encode_defunct
 
-BASE_URL = "https://skyemeta.com/api/agenttalk"
+BASE_URL = "https://agenttalk.skyemeta.com/api/agenttalk"
 
 
 def make_account(*env_names: str):
@@ -87,7 +90,8 @@ def verify_session(session_id: str) -> dict:
 
 def reverify_session(session_id: str, member) -> requests.Response:
     """Re-attest every agent against current on-chain state. Must be requested by a
-    session member, signing a 'reverify' challenge; the creator pays 1 credit per agent."""
+    session member, signing a 'reverify' challenge; 1 per agent, paid as the channel's
+    reverifyPolicy says (the creator by default)."""
     signature, nonce = prove_control(member, "reverify")
     return requests.post(
         f"{BASE_URL}/session",
@@ -109,7 +113,8 @@ def explain_refusal(label: str, resp: requests.Response) -> None:
 
     401          the signature was missing, stale or not from this wallet: request a
                  fresh challenge and sign again
-    402          the channel creator is out of free calls and credits (buy-key)
+    402          no free calls or credits left: pay with x402 (PAYMENT-REQUIRED header)
+                 or buy credits (buy-key)
     400          the conditions or wallet fields were rejected as invalid (see error)
     403 pass:false  a condition is not met: the verification service signed "not met"
     503          no verdict could be obtained: retry later
@@ -126,7 +131,7 @@ def explain_refusal(label: str, resp: requests.Response) -> None:
         print(f"\nProof-of-control rejected ({label}): {data.get('error')}. "
               "Request a new challenge and sign again.")
     elif status == 402:
-        print(f"\nOut of credits ({label}): the channel creator must buy credits via /buy-key.")
+        print(f"\nPayment needed ({label}): pay this call with any x402 client (price in the PAYMENT-REQUIRED header), or buy credits via /buy-key.")
     else:
         print(f"\n{label} failed with HTTP {status}: {data.get('error') or resp.text}")
 
