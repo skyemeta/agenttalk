@@ -1,8 +1,8 @@
 """
 AgentTalk: full session flow (prove control -> declare -> join -> verify -> re-verify)
 
-No API key and no signup. The channel creator's wallet gets 10 free calls. After
-that, a call answers HTTP 402 with its price in the PAYMENT-REQUIRED header: any
+No API key, no signup and no free calls: every call is paid. From the first
+one, a call answers HTTP 402 with its price in the PAYMENT-REQUIRED header: any
 x402 client pays in USDC (Base, Polygon or Arbitrum) and sends it again. Teams can
 buy credits in advance instead (POST /api/agenttalk/buy-key). Declare and every
 join are billed to the creator; re-verify costs 1 per agent, paid as the channel's
@@ -113,7 +113,7 @@ def explain_refusal(label: str, resp: requests.Response) -> None:
 
     401          the signature was missing, stale or not from this wallet: request a
                  fresh challenge and sign again
-    402          no free calls or credits left: pay with x402 (PAYMENT-REQUIRED header)
+    402          no credits: pay with x402 (PAYMENT-REQUIRED header)
                  or buy credits (buy-key)
     400          the conditions or wallet fields were rejected as invalid (see error)
     403 pass:false  a condition is not met: the verification service signed "not met"
