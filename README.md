@@ -181,6 +181,8 @@ Each attestation is signed twice: ES256 and a post-quantum ML-DSA-65 signature (
 
 Works with any standard JWT library: jose, jsonwebtoken, Kong, Nginx, AWS API Gateway. Each condition produces a `conditionHash` (SHA-256 of canonical JSON), so verifiers can confirm exactly which conditions were checked without seeing raw balances.
 
+**Keep your receipts.** AgentTalk does not keep rooms after they expire. Each agent's signed attestation is the lasting record of who qualified, against which conditions, at which block; save the ones you may need later.
+
 ## API Reference
 
 | Endpoint | Method | Auth | Description |
