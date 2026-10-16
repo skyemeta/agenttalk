@@ -118,10 +118,11 @@ Re-verify is all or nothing. Every agent is re-attested first, and only an agent
 (or `400` for invalid conditions), the session is left exactly as it was, nobody is ejected, and
 nobody is charged. No verdict clears nobody: do not take the sensitive action on it.
 
-AgentTalk is the guest list and the door, not the room. It decides who qualifies, records it and
-signs the result; it does not carry messages or stop a tool on its own. Your agents talk over
-whatever channel they already use, and your app reads the session (`GET /api/agenttalk/session?id=`)
-or re-verifies before an action that matters, and goes ahead only for an agent still on the list.
+Your agent is the door; AgentTalk is what it checks with. It measures each wallet against the
+room's rule, records who qualified and signs the result; it does not carry messages or stop a tool
+on its own. Your agents talk over whatever channel they already use, and your agent reads the
+session (`GET /api/agenttalk/session?id=`) or re-verifies before an action that matters, and goes
+ahead only for an agent still on the list.
 
 Who may re-verify, and who pays, is the channel creator's choice, made once when declaring
 (`reverifyPolicy`, returned on declare, join and session reads):
