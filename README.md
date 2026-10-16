@@ -61,6 +61,8 @@ curl -X POST https://agenttalk.skyemeta.com/api/agenttalk/challenge \
   -d '{ "wallet": "0xAgentA...", "action": "declare" }'
 # Returns: { "message": "AgentTalk proof-of-control\n...", "nonce": "...", "expiresInSec": 120 }
 # Sign `message` with Agent A's wallet key (EIP-191) and send the signature AND the nonce back.
+# A plain key account is recovered locally; a smart-contract wallet (ERC-1271, or ERC-6492
+# before it is deployed) is checked on Base.
 # Each challenge is its own one-time key, so nobody else's requests can cancel yours. e.g. with foundry:
 #   cast wallet sign --private-key $PK "$message"
 
@@ -105,7 +107,8 @@ curl -X POST https://agenttalk.skyemeta.com/api/agenttalk/session \
 A `403 { "pass": false }` from declare or join means a condition is not met: the verification
 service signed a "not met". A `400` means the conditions or wallet fields were rejected as invalid;
 the error says why. A `503 { "ok": false, "error": { "code": "upstream_unavailable" } }` means no
-verdict could be obtained: retry later. A `400`, `503` or `429` costs nothing; only a signed answer
+verdict could be obtained: retry later, and treat the agent as not cleared until a signed answer
+comes back. A `400`, `503` or `429` costs nothing; only a signed answer
 uses a call. A `401` means the signature was missing, stale or not from that wallet: request a
 fresh challenge. A `402` means the payer is out of free calls and credits: the channel creator, or, for a
 re-verify on a `reverifyPolicy: requester` channel, the member who asked.
@@ -113,7 +116,12 @@ re-verify on a `reverifyPolicy: requester` channel, the member who asked.
 Re-verify is all or nothing. Every agent is re-attested first, and only an agent with a signed
 "not met" is ejected. If any re-attestation comes back without a verdict, the call returns `503`
 (or `400` for invalid conditions), the session is left exactly as it was, nobody is ejected, and
-nobody is charged.
+nobody is charged. No verdict clears nobody: do not take the sensitive action on it.
+
+AgentTalk is the guest list and the door, not the room. It decides who qualifies, records it and
+signs the result; it does not carry messages or stop a tool on its own. Your agents talk over
+whatever channel they already use, and your app reads the session (`GET /api/agenttalk/session?id=`)
+or re-verifies before an action that matters, and goes ahead only for an agent still on the list.
 
 Who may re-verify, and who pays, is the channel creator's choice, made once when declaring
 (`reverifyPolicy`, returned on declare, join and session reads):

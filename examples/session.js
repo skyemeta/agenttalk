@@ -90,7 +90,7 @@ async function reverifySession(sessionId, member) {
 //                or buy credits (buy-key)
 //   400          the conditions or wallet fields were rejected as invalid (see error)
 //   403 pass:false  a condition is not met: the verification service signed "not met"
-//   503          no verdict could be obtained: retry later
+//   503          no verdict could be obtained: retry later; not cleared, do not act on it
 //   A 400, 503 or 429 costs nothing; only a signed answer uses a call.
 function explainRefusal(label, res) {
   const { status, data } = res;
