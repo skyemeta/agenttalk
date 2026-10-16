@@ -7,6 +7,9 @@
     "start": "node session.js"
   },
   "dependencies": {
-    "viem": "^2.51.3"
+    "viem": "^2.51.3",
+    "@x402/core": "^2.0.0",
+    "@x402/evm": "^2.0.0",
+    "jose": "^6.0.0"
   }
 }
