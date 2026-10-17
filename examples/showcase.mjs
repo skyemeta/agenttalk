@@ -1,4 +1,4 @@
-// AgentTalk showcase: a real run against production that writes its own transcript.
+// SkyeSkiff showcase: a real run against production that writes its own transcript.
 //
 // A smart-contract wallet opens a room ("holds at least 0.5 USDC on Base"), a regular wallet
 // that holds USDC is admitted, a regular wallet that holds none is refused, the admitted one
@@ -22,7 +22,7 @@ const { jwtVerify, createRemoteJWKSet, decodeProtectedHeader } = await import(NM
 
 const DRY = process.argv.includes('--dry');
 const NET = 'eip155:8453';
-const API = 'https://agenttalk.skyemeta.com/api/agenttalk';
+const API = 'https://skyeskiff.skyemeta.com/api/skyeskiff';
 const USDC = '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913';
 const THRESHOLD = '0.5';
 const dir = new URL('.', import.meta.url);
@@ -96,7 +96,7 @@ const receipt = (who, att) => {
 
 // ---- the run ----------------------------------------------------------------
 const who = { SW: { address: SW, smart: true }, B: { address: B.address, account: B }, C: { address: C.address, account: C } };
-say(`# AgentTalk, watched live\n\nRun at ${now()} against https://agenttalk.skyemeta.com. Nothing here is staged: every transaction is on Base and every receipt checks against InsumerAPI's public keys.\n`);
+say(`# SkyeSkiff, watched live\n\nRun at ${now()} against https://skyeskiff.skyemeta.com. Nothing here is staged: every transaction is on Base and every receipt checks against InsumerAPI's public keys.\n`);
 say(`Cast:\n- Creator: ${SW}, a Coinbase Smart Wallet (a contract account; signs with ERC-1271). It also pays for every call, per call, with x402.\n- Agent B: ${B.address}, a regular wallet holding ${await usdc(B.address)} USDC.\n- Agent C: ${C.address}, a regular wallet holding ${await usdc(C.address)} USDC.\n\nThe room's rule: hold at least ${THRESHOLD} USDC on Base.`);
 if (DRY) { say('\n(dry run: no calls made)'); process.exit(0); }
 
@@ -125,7 +125,7 @@ const bBal = await pc.readContract({ address: USDC, abi: erc20, functionName: 'b
 const wc = createWalletClient({ account: B, chain: base, transport: http() });
 const tx = await wc.writeContract({ address: USDC, abi: erc20, functionName: 'transfer', args: [SW, bBal] });
 const rc = await pc.waitForTransactionReceipt({ hash: tx });
-say(`B sent ${formatUnits(bBal, 6)} USDC to the creator: ${scan(tx)} (block ${rc.blockNumber}, ${rc.status}). B now holds ${await usdc(B.address)} USDC. Nothing told AgentTalk; the room still lists B.`);
+say(`B sent ${formatUnits(bBal, 6)} USDC to the creator: ${scan(tx)} (block ${rc.blockNumber}, ${rc.status}). B now holds ${await usdc(B.address)} USDC. Nothing told SkyeSkiff; the room still lists B.`);
 const before = await (await fetch(`${API}/session?id=${sessionId}`)).json();
 say(`Session read before any re-check: members ${before.agents?.map(a => short(a.wallet)).join(', ')}.`);
 await new Promise(r => setTimeout(r, 8000));

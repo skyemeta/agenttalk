@@ -1,10 +1,10 @@
 /**
- * AgentTalk: full session flow (prove control → declare → join → verify → re-verify)
+ * SkyeSkiff: full session flow (prove control → declare → join → verify → re-verify)
  *
  * No API key, no signup and no free calls: every call is paid. From the first
  * one, a call answers HTTP 402 with its price in the PAYMENT-REQUIRED header: any
  * x402 client pays in USDC (Base, Polygon or Arbitrum) and sends it again. Teams can
- * buy credits in advance instead (POST /api/agenttalk/buy-key). Declare and every
+ * buy credits in advance instead (POST /api/skyeskiff/buy-key). Declare and every
  * join are billed to the creator; re-verify costs 1 per agent, paid as the channel's
  * reverifyPolicy says (the creator by default).
  *
@@ -28,7 +28,7 @@
 
 import { privateKeyToAccount, generatePrivateKey } from 'viem/accounts';
 
-const BASE_URL = 'https://agenttalk.skyemeta.com/api/agenttalk';
+const BASE_URL = 'https://skyeskiff.skyemeta.com/api/skyeskiff';
 
 // Fresh throwaway keypairs unless you supply your own funded ones via env.
 const agentA = privateKeyToAccount(process.env.DEMO_PRIVATE_KEY_A || process.env.DEMO_PRIVATE_KEY || generatePrivateKey());

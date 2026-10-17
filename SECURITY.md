@@ -4,7 +4,7 @@
 
 Please report security issues privately, through GitHub's private vulnerability reporting:
 
-**[Report a vulnerability](https://github.com/skyemeta/agenttalk/security/advisories/new)**
+**[Report a vulnerability](https://github.com/skyemeta/skyeskiff/security/advisories/new)**
 
 That opens an advisory visible only to you and the maintainers. If you cannot use GitHub, email support@insumermodel.com.
 

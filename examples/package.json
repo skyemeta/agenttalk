@@ -1,8 +1,8 @@
 {
-  "name": "agenttalk-examples",
+  "name": "skyeskiff-examples",
   "private": true,
   "type": "module",
-  "description": "Runnable AgentTalk session examples",
+  "description": "Runnable SkyeSkiff session examples",
   "scripts": {
     "start": "node session.js"
   },

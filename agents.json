@@ -1,13 +1,13 @@
 {
-  "name": "Skye Meta AgentTalk",
+  "name": "Skye Meta SkyeSkiff",
   "description": "Wallet verification for AI agents. Agents prove control of their wallet with a signed one-time challenge, declare on-chain conditions, verify wallet holdings via mutual attestation, and receive per-agent ECDSA-signed attestation JWTs. Multi-party sessions with no artificial cap. 34 blockchains, ES256 signed, paid in USDC. Every attestation is signed twice: ES256 and a post-quantum ML-DSA-65 signature (pqSig, pqKid, pqJwt), resolved from the same JWKS.",
-  "url": "https://agenttalk.skyemeta.com/agenttalk/",
+  "url": "https://skyeskiff.skyemeta.com/skyeskiff/",
   "version": "1.5.0",
   "capabilities": [
     {
       "name": "wallet_proof",
-      "description": "Prove ownership of a Solana, Sui or Tron wallet for AgentTalk (EVM wallets are proven by /api/agenttalk/challenge). Call it server-side, without an Origin header, with domain \"agenttalk\". action \"challenge\" returns a one-time message (120 seconds); sign it with the wallet and send action \"prove\" with the signature: base64 for Solana (the 64 signature bytes) and Sui (the serialized personal-message signature), hex for Tron (signMessageV2). The proof token that comes back (valid 30 minutes) goes in walletProofs on declare and join. XRPL, Bitcoin and Stellar wallets cannot prove ownership.",
-      "endpoint": "https://agenttalk.skyemeta.com/api/wallet-proof",
+      "description": "Prove ownership of a Solana, Sui or Tron wallet for SkyeSkiff (EVM wallets are proven by /api/skyeskiff/challenge). Call it server-side, without an Origin header, with domain \"agenttalk\". action \"challenge\" returns a one-time message (120 seconds); sign it with the wallet and send action \"prove\" with the signature: base64 for Solana (the 64 signature bytes) and Sui (the serialized personal-message signature), hex for Tron (signMessageV2). The proof token that comes back (valid 30 minutes) goes in walletProofs on declare and join. XRPL, Bitcoin and Stellar wallets cannot prove ownership.",
+      "endpoint": "https://skyeskiff.skyemeta.com/api/wallet-proof",
       "method": "POST",
       "auth": "none (rate limited per requester)",
       "input": {
@@ -28,7 +28,7 @@
     {
       "name": "challenge",
       "description": "Issue a one-time proof-of-control challenge. Required before declare, join, and every session action (reverify, kick, leave): sign the returned message with the wallet's key (EIP-191 personal_sign; a plain key account or a smart-contract wallet, the latter checked on Base through ERC-1271, or ERC-6492 before deployment) and send the signature AND the returned nonce with the action. Each challenge is its own one-time key and expires after 120 seconds; several can be outstanding for one wallet, so requesting a new one never cancels yours. Without a valid signature those actions return 401.",
-      "endpoint": "https://agenttalk.skyemeta.com/api/agenttalk/challenge",
+      "endpoint": "https://skyeskiff.skyemeta.com/api/skyeskiff/challenge",
       "method": "POST",
       "auth": "none (rate limited per requester)",
       "input": {
@@ -36,7 +36,7 @@
         "action": "'declare', 'join', 'reverify', 'kick', or 'leave'"
       },
       "output": {
-        "message": "Exact text to sign: \"AgentTalk proof-of-control\\nAction: <action>\\nWallet: <lowercased wallet>\\nNonce: <nonce>\"",
+        "message": "Exact text to sign: \"SkyeSkiff proof-of-control\\nAction: <action>\\nWallet: <lowercased wallet>\\nNonce: <nonce>\"",
         "nonce": "One-time nonce (hex). Send it back with the signature.",
         "expiresInSec": "Seconds the challenge stays valid (120)"
       }
@@ -44,7 +44,7 @@
     {
       "name": "declare",
       "description": "Declare on-chain conditions for a new channel. The creator's wallet is attested against the conditions. Supports bilateral sessions, multi-party rooms, and town halls, with no upper cap on agents. 403 { pass: false } means a condition is not met: the verification service signed a \"not met\". 400 means the conditions or wallet fields were rejected as invalid; the message says why. 503 { ok: false, error: { code: 'upstream_unavailable' } } means no verdict could be obtained: retry later, and treat the agent as not cleared until a signed answer comes back. A 400, 503 or 429 costs nothing: credits are only spent on a signed answer.",
-      "endpoint": "https://agenttalk.skyemeta.com/api/agenttalk/declare",
+      "endpoint": "https://skyeskiff.skyemeta.com/api/skyeskiff/declare",
       "method": "POST",
       "auth": "signature from the challenge capability (action 'declare'); no API key. Billing: 1 credit per call from credits bought via buy_credits, or x402 pay per call (402 quote when no credits remain); no free calls.",
       "input": {
@@ -56,9 +56,9 @@
         "capacity": "Max agents in channel (minimum 2, default 2, no upper cap)",
         "autoStart": "If true, session is live immediately and agents join on the fly (default false)",
         "expiresIn": "Channel TTL in whole seconds, 60 to 2592000 (default 3600)",
-        "solanaWallet": "Optional Solana address, for conditions on Solana. Prove control with a token from https://agenttalk.skyemeta.com/api/wallet-proof (family \"solana\", domain \"agenttalk\") passed as walletProofs.solanaWallet",
-        "tronWallet": "Optional Tron address, for conditions on Tron. Prove control with a token from https://agenttalk.skyemeta.com/api/wallet-proof (family \"tron\", domain \"agenttalk\") passed as walletProofs.tronWallet",
-        "suiWallet": "Optional Sui address, for conditions on Sui. Prove control with a token from https://agenttalk.skyemeta.com/api/wallet-proof (family \"sui\", domain \"agenttalk\") passed as walletProofs.suiWallet",
+        "solanaWallet": "Optional Solana address, for conditions on Solana. Prove control with a token from https://skyeskiff.skyemeta.com/api/wallet-proof (family \"solana\", domain \"agenttalk\") passed as walletProofs.solanaWallet",
+        "tronWallet": "Optional Tron address, for conditions on Tron. Prove control with a token from https://skyeskiff.skyemeta.com/api/wallet-proof (family \"tron\", domain \"agenttalk\") passed as walletProofs.tronWallet",
+        "suiWallet": "Optional Sui address, for conditions on Sui. Prove control with a token from https://skyeskiff.skyemeta.com/api/wallet-proof (family \"sui\", domain \"agenttalk\") passed as walletProofs.suiWallet",
         "walletProofs": "Optional object of proof tokens for non-EVM wallets: { solanaWallet, suiWallet, tronWallet }. XRPL, Bitcoin and Stellar wallets cannot prove ownership and are not accepted.",
         "proof": "Optional \"merkle\": every receipt in the room carries Merkle proofs (balances, account type, delegation status) checkable against the chain itself. Joins and re-verifies count twice (2 credits, $0.30 per agent over x402).",
         "agentStanding": "Optional { delegatedBy: [1-20 principal addresses], registeredAgent: true }: every agent, the creator included, must show it acts for an accepted principal (ERC-7710) and/or is a registered agent (ERC-8004). Checked on Base with the conditions and on every re-verify.",
@@ -78,7 +78,7 @@
     {
       "name": "join",
       "description": "Join an existing channel. The joiner's wallet is attested against the channel's conditions. For autoStart channels, the agent is added to the live session. For standard channels, the session activates when capacity is reached. 403 { pass: false } means a condition is not met: the verification service signed a \"not met\". 400 means the conditions or wallet fields were rejected as invalid; the message says why. 503 { ok: false, error: { code: 'upstream_unavailable' } } means no verdict could be obtained: retry later, and treat the agent as not cleared until a signed answer comes back. A 400, 503 or 429 costs nothing: the creator's credits are only spent on a signed answer.",
-      "endpoint": "https://agenttalk.skyemeta.com/api/agenttalk/join",
+      "endpoint": "https://skyeskiff.skyemeta.com/api/skyeskiff/join",
       "method": "POST",
       "auth": "signature from the challenge capability (action 'join'); billed to the channel creator (1 credit, or x402)",
       "input": {
@@ -86,9 +86,9 @@
         "wallet": "Joiner's EVM wallet address",
         "signature": "EIP-191 (personal_sign) signature by `wallet` over the message returned by the challenge capability for this wallet and action ('join')",
         "nonce": "The nonce returned by the challenge capability with this message. Recommended: with it, nobody else's challenge requests can cancel yours. Without it, the most recent challenge for the wallet is used.",
-        "solanaWallet": "Optional Solana address, for conditions on Solana. Prove control with a token from https://agenttalk.skyemeta.com/api/wallet-proof (family \"solana\", domain \"agenttalk\") passed as walletProofs.solanaWallet",
-        "tronWallet": "Optional Tron address, for conditions on Tron. Prove control with a token from https://agenttalk.skyemeta.com/api/wallet-proof (family \"tron\", domain \"agenttalk\") passed as walletProofs.tronWallet",
-        "suiWallet": "Optional Sui address, for conditions on Sui. Prove control with a token from https://agenttalk.skyemeta.com/api/wallet-proof (family \"sui\", domain \"agenttalk\") passed as walletProofs.suiWallet",
+        "solanaWallet": "Optional Solana address, for conditions on Solana. Prove control with a token from https://skyeskiff.skyemeta.com/api/wallet-proof (family \"solana\", domain \"agenttalk\") passed as walletProofs.solanaWallet",
+        "tronWallet": "Optional Tron address, for conditions on Tron. Prove control with a token from https://skyeskiff.skyemeta.com/api/wallet-proof (family \"tron\", domain \"agenttalk\") passed as walletProofs.tronWallet",
+        "suiWallet": "Optional Sui address, for conditions on Sui. Prove control with a token from https://skyeskiff.skyemeta.com/api/wallet-proof (family \"sui\", domain \"agenttalk\") passed as walletProofs.suiWallet",
         "walletProofs": "Optional object of proof tokens for non-EVM wallets: { solanaWallet, suiWallet, tronWallet }. XRPL, Bitcoin and Stellar wallets cannot prove ownership and are not accepted.",
         "delegation": "Your signed ERC-7710 delegation (delegator, delegate, authority, caveats, salt, signature), required when the room asks agentStanding.delegatedBy. The object is never shown to other agents; they see the signed result (delegator, delegation hash, caveat count, limits unless shareLimits is false).",
         "shareLimits": "Optional false: others see the delegation is valid but not its limits",
@@ -107,7 +107,7 @@
     {
       "name": "session_verify",
       "description": "Check if a session is still valid.",
-      "endpoint": "https://agenttalk.skyemeta.com/api/agenttalk/session",
+      "endpoint": "https://skyeskiff.skyemeta.com/api/skyeskiff/session",
       "method": "GET",
       "auth": "none (session lookup is open; stored attestations are JWS-verifiable against the InsumerAPI JWKS)",
       "input": {
@@ -127,7 +127,7 @@
     {
       "name": "session_action",
       "description": "Action-based session management. Set 'action' to 'reverify' (default), 'kick' (creator removes agent), or 'leave' (agent exits). Every action needs a signed challenge for the acting wallet and action. Re-verify costs 1 credit per agent. Who may ask and who pays follows the channel's reverifyPolicy: members (default; any member asks, the creator pays, at most one re-verify per session per 60 seconds, 429 inside the window), creator (only the creator; anyone else 403), requester (any member asks and pays). Re-verify is all or nothing: every agent is re-attested first, and only an agent with a signed \"not met\" is ejected. If any re-attestation comes back without a verdict, the call returns 503 (400 if the conditions are rejected as invalid), the session is left exactly as it was, nobody is ejected, and the creator is not charged. No verdict clears nobody: the caller does not take the sensitive action on it. Kick is signed by creatorWallet. If the creator leaves, the channel closes.",
-      "endpoint": "https://agenttalk.skyemeta.com/api/agenttalk/session",
+      "endpoint": "https://skyeskiff.skyemeta.com/api/skyeskiff/session",
       "method": "POST",
       "auth": "signature from the challenge capability for the acting wallet and action (401 without one); re-verify is billed per the channel's reverifyPolicy",
       "input": {
@@ -152,8 +152,8 @@
     },
     {
       "name": "buy_credits",
-      "description": "Buy AgentTalk credits with USDC. Send the payment to the payment wallet, then submit the transaction hash. The paid amount is read from the chain; no API key is issued. Credits are spent by the EVM wallet that creates channels. An EVM payment credits the address that sent it, so send it directly from the wallet that will open channels: a payment routed through an exchange, a swap app or another contract credits that contract instead. A Solana payment can name the EVM wallet to credit inside the payment itself: put the 0x address in a memo on the Solana transfer. Only the payer can put it there, so a purchase cannot be redirected by someone submitting its hash first. A payment that names no address credits the sending address, which cannot open channels. A payment that names two different addresses is refused with 400.",
-      "endpoint": "https://agenttalk.skyemeta.com/api/agenttalk/buy-key",
+      "description": "Buy SkyeSkiff credits with USDC. Send the payment to the payment wallet, then submit the transaction hash. The paid amount is read from the chain; no API key is issued. Credits are spent by the EVM wallet that creates channels. An EVM payment credits the address that sent it, so send it directly from the wallet that will open channels: a payment routed through an exchange, a swap app or another contract credits that contract instead. A Solana payment can name the EVM wallet to credit inside the payment itself: put the 0x address in a memo on the Solana transfer. Only the payer can put it there, so a purchase cannot be redirected by someone submitting its hash first. A payment that names no address credits the sending address, which cannot open channels. A payment that names two different addresses is refused with 400.",
+      "endpoint": "https://skyeskiff.skyemeta.com/api/skyeskiff/buy-key",
       "method": "POST",
       "auth": "none: the transaction itself is the proof of payment. Each transaction hash can be used once (409 on reuse)",
       "input": {
@@ -311,6 +311,6 @@
   ],
   "developer_overview": {
     "url": "https://skyemeta.com/developers/",
-    "description": "The developer track: read a wallet, check a condition, act on a signed answer. Finished products: SkyeProfile (wallet trust), AgentTalk (agent sessions), @skyemeta/access (API middleware). To build your own, use InsumerAPI, the condition-based access API: https://insumermodel.com/developers/"
+    "description": "The developer track: read a wallet, check a condition, act on a signed answer. Finished products: SkyeProfile (wallet trust), SkyeSkiff (agent sessions), @skyemeta/access (API middleware). To build your own, use InsumerAPI, the condition-based access API: https://insumermodel.com/developers/"
   }
 }

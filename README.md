@@ -1,12 +1,14 @@
-# AgentTalk
+# SkyeSkiff
+
+*Formerly AgentTalk. The old addresses (agenttalk.skyemeta.com, /api/agenttalk/...) still work.*
 
 **Wallet auth for agent-to-agent communication.**
 
-OAuth proves who you are. API keys prove you have permission. AgentTalk proves what you hold: on-chain, across 34 blockchains, cryptographically signed, verifiable by anyone.
+OAuth proves who you are. API keys prove you have permission. SkyeSkiff proves what you hold: on-chain, across 34 blockchains, cryptographically signed, verifiable by anyone.
 
 Before two agents exchange data, both verify their wallets satisfy the same conditions. Token balances, NFT ownership, compliance attestations, whatever the use case requires. The blockchain state is the credential. Sell your tokens, lose your session. No secrets to share. No identity to verify first. No static credentials that expire or get leaked.
 
-A signed challenge and a call per agent to a mutual session. [Try it free](https://skyemeta.com/agenttalk/): 10 calls per wallet, no signup.
+A signed challenge and a call per agent to a mutual session. [Try it free](https://skyemeta.com/skyeskiff/): 10 calls per wallet, no signup.
 
 ## Why Not OAuth?
 
@@ -14,9 +16,9 @@ Agent protocols today authenticate agents the same way we authenticate humans: A
 
 But for agent commerce, DeFi coordination, and governance workflows, the question isn't who you are. It's **what you hold**. A procurement agent negotiating a $1M deal should prove it represents a wallet with $1M, not just that it has a valid OAuth token.
 
-AgentTalk is [condition-based access](https://insumermodel.com/how-it-works/) for the agent layer. You define conditions. Both agents are evaluated against live blockchain state. The result is an ECDSA-signed boolean: pass or fail, not a balance dump. The signed attestation is verifiable offline via [JWKS](https://insumermodel.com/.well-known/jwks.json). No callback to us required.
+SkyeSkiff is [condition-based access](https://insumermodel.com/how-it-works/) for the agent layer. You define conditions. Both agents are evaluated against live blockchain state. The result is an ECDSA-signed boolean: pass or fail, not a balance dump. The signed attestation is verifiable offline via [JWKS](https://insumermodel.com/.well-known/jwks.json). No callback to us required.
 
-| | AgentTalk | OAuth 2.0 | API Keys | mTLS |
+| | SkyeSkiff | OAuth 2.0 | API Keys | mTLS |
 |---|---|---|---|---|
 | Proves what agent holds | Yes | No | No | No |
 | Dynamic (sell token = lose access) | Yes | No | No | No |
@@ -30,7 +32,7 @@ AgentTalk is [condition-based access](https://insumermodel.com/how-it-works/) fo
 Read the chain. Evaluate the conditions. Sign the result.
 
 ```
-Agent A                          AgentTalk                         Agent B
+Agent A                          SkyeSkiff                         Agent B
    |-- POST /challenge (declare) -->|                                |
    |<-- message to sign ------------|                                |
    |-- POST /declare (sig, conds) ->|                                |
@@ -56,10 +58,10 @@ see [`examples/`](examples/): `session.js`, `session.py`, or `session.sh`.
 
 ```bash
 # 1. Prove control of Agent A's wallet
-curl -X POST https://agenttalk.skyemeta.com/api/agenttalk/challenge \
+curl -X POST https://skyeskiff.skyemeta.com/api/skyeskiff/challenge \
   -H "Content-Type: application/json" \
   -d '{ "wallet": "0xAgentA...", "action": "declare" }'
-# Returns: { "message": "AgentTalk proof-of-control\n...", "nonce": "...", "expiresInSec": 120 }
+# Returns: { "message": "SkyeSkiff proof-of-control\n...", "nonce": "...", "expiresInSec": 120 }
 # Sign `message` with Agent A's wallet key (EIP-191) and send the signature AND the nonce back.
 # A plain key account is recovered locally; a smart-contract wallet (ERC-1271, or ERC-6492
 # before it is deployed) is checked on Base.
@@ -67,7 +69,7 @@ curl -X POST https://agenttalk.skyemeta.com/api/agenttalk/challenge \
 #   cast wallet sign --private-key $PK "$message"
 
 # 2. Declare conditions, passing the signature (no API key needed; the call is paid by x402 or credits)
-curl -X POST https://agenttalk.skyemeta.com/api/agenttalk/declare \
+curl -X POST https://skyeskiff.skyemeta.com/api/skyeskiff/declare \
   -H "Content-Type: application/json" \
   -d '{
     "wallet": "0xAgentA...",
@@ -88,17 +90,17 @@ curl -X POST https://agenttalk.skyemeta.com/api/agenttalk/declare \
 
 # 3. Join: Agent B proves control of its own wallet first (challenge with action "join"),
 #    then joins (no API key; creator pays both sides)
-curl -X POST https://agenttalk.skyemeta.com/api/agenttalk/join \
+curl -X POST https://skyeskiff.skyemeta.com/api/skyeskiff/join \
   -H "Content-Type: application/json" \
   -d '{ "channelId": "ch_...", "wallet": "0xAgentB...", "signature": "0x...", "nonce": "..." }'
 # Returns: { "sessionId": "ses_...", "agents": [{ wallet, attestation }, ...] }
 
 # 4. Verify
-curl "https://agenttalk.skyemeta.com/api/agenttalk/session?id=ses_..."
+curl "https://skyeskiff.skyemeta.com/api/skyeskiff/session?id=ses_..."
 # Returns: { "valid": true, "agents": [...], "conditions": [...] }
 
 # 5. Re-verify: a session member signs a challenge with action "reverify", then:
-curl -X POST https://agenttalk.skyemeta.com/api/agenttalk/session \
+curl -X POST https://skyeskiff.skyemeta.com/api/skyeskiff/session \
   -H "Content-Type: application/json" \
   -d '{ "action": "reverify", "sessionId": "ses_...", "wallet": "0xAgentA...", "signature": "0x...", "nonce": "..." }'
 # Returns: { "valid": true, "agents": [...fresh attestations], "ejected": [...] }
@@ -118,10 +120,10 @@ Re-verify is all or nothing. Every agent is re-attested first, and only an agent
 (or `400` for invalid conditions), the session is left exactly as it was, nobody is ejected, and
 nobody is charged. No verdict clears nobody: do not take the sensitive action on it.
 
-Your agent is the door; AgentTalk is what it checks with. It measures each wallet against the
+Your agent is the door; SkyeSkiff is what it checks with. It measures each wallet against the
 room's rule, records who qualified and signs the result; it does not carry messages or stop a tool
 on its own. Your agents talk over whatever channel they already use, and your agent reads the
-session (`GET /api/agenttalk/session?id=`) or re-verifies before an action that matters, and goes
+session (`GET /api/skyeskiff/session?id=`) or re-verifies before an action that matters, and goes
 ahead only for an agent still on the list.
 
 Who may re-verify, and who pays, is the channel creator's choice, made once when declaring
@@ -166,7 +168,7 @@ Use `"native"` as the `contractAddress` for ETH, BNB, POL, SOL, etc. (`token_bal
 
 Up to 10 conditions per channel. All must pass (AND logic). 34 blockchains: 31 EVM chains (Ethereum, Polygon, Base, Arbitrum, Optimism, Avalanche, BNB Chain and 24 more) plus Solana, Sui and Tron.
 
-A condition on Solana, Sui or Tron takes the matching wallet field (`solanaWallet`, `suiWallet`, `tronWallet`) on declare and join. Prove ownership of that wallet first: sign a challenge from `https://agenttalk.skyemeta.com/api/wallet-proof` (family `solana`, `sui` or `tron`; domain `agenttalk`) and pass the token in `walletProofs`. XRP Ledger, Bitcoin and Stellar wallets cannot prove ownership and are not accepted.
+A condition on Solana, Sui or Tron takes the matching wallet field (`solanaWallet`, `suiWallet`, `tronWallet`) on declare and join. Prove ownership of that wallet first: sign a challenge from `https://skyeskiff.skyemeta.com/api/wallet-proof` (family `solana`, `sui` or `tron`; domain `agenttalk`) and pass the token in `walletProofs`. XRP Ledger, Bitcoin and Stellar wallets cannot prove ownership and are not accepted.
 
 ## Who Each Agent Acts For
 
@@ -176,11 +178,11 @@ A room can ask more than "what do you hold". Add `agentStanding` when you declar
 "agentStanding": { "delegatedBy": ["0xYourAcceptedPrincipal"], "registeredAgent": false }
 ```
 
-Every agent, the creator included, then shows its own proof on declare or join: a signed ERC-7710 delegation (`delegation`, MetaMask Delegation Framework on Base) from one of the listed principals, and/or its ERC-8004 `agentId` when `registeredAgent` is true. The proof is checked with the room's conditions and again on every re-verify, so an agent whose delegation is revoked is removed. Other agents see only the signed result, never the delegation itself; send `shareLimits: false` to keep its limits private too. Full details: [llms-full.txt, section 3a](https://agenttalk.skyemeta.com/llms-full.txt).
+Every agent, the creator included, then shows its own proof on declare or join: a signed ERC-7710 delegation (`delegation`, MetaMask Delegation Framework on Base) from one of the listed principals, and/or its ERC-8004 `agentId` when `registeredAgent` is true. The proof is checked with the room's conditions and again on every re-verify, so an agent whose delegation is revoked is removed. Other agents see only the signed result, never the delegation itself; send `shareLimits: false` to keep its limits private too. Full details: [llms-full.txt, section 3a](https://skyeskiff.skyemeta.com/llms-full.txt).
 
 ## Verification
 
-Every attestation is an ES256 JWT. Read the token's `kid` and resolve the matching key from the JWKS (AgentTalk sessions sign under `insumer-attest-v2`, like every key minted today; never pin the literal, kids rotate). Verify offline, with no network call needed after the initial attestation:
+Every attestation is an ES256 JWT. Read the token's `kid` and resolve the matching key from the JWKS (SkyeSkiff sessions sign under `insumer-attest-v2`, like every key minted today; never pin the literal, kids rotate). Verify offline, with no network call needed after the initial attestation:
 
 ```
 GET https://insumermodel.com/.well-known/jwks.json
@@ -190,21 +192,21 @@ Each attestation is signed twice: ES256 and a post-quantum ML-DSA-65 signature (
 
 Works with any standard JWT library: jose, jsonwebtoken, Kong, Nginx, AWS API Gateway. Each condition produces a `conditionHash` (SHA-256 of canonical JSON), so verifiers can confirm exactly which conditions were checked without seeing raw balances.
 
-**Keep your receipts.** AgentTalk does not keep rooms after they expire. Each agent's signed attestation is the lasting record of who qualified, against which conditions, at which block; save the ones you may need later.
+**Keep your receipts.** SkyeSkiff does not keep rooms after they expire. Each agent's signed attestation is the lasting record of who qualified, against which conditions, at which block; save the ones you may need later.
 
 ## API Reference
 
 | Endpoint | Method | Auth | Description |
 |----------|--------|------|-------------|
-| `/api/agenttalk/challenge` | POST | None | One-time message to sign for `{ wallet, action }` (declare, join, reverify, kick, leave); valid 120 s |
-| `/api/agenttalk/declare` | POST | Signed challenge; x402 pay per call or credits, no free calls | Create a condition-gated channel |
-| `/api/agenttalk/join` | POST | Signed challenge (creator pays) | Join a channel, create mutual session |
-| `/api/agenttalk/session?id=` | GET | None | Check session validity |
-| `/api/agenttalk/session?channelId=` | GET | None | A room's status (waiting or active) and, once active, its session id: in a room that starts when full, only the agent whose join fills it gets the id in its join response |
-| `/api/agenttalk/session` | POST | Signed challenge from a session member (1 per agent, paid per the channel's `reverifyPolicy`; credits or x402) | Re-verify every agent against current state; also `kick` (signed by the creator) and `leave` |
-| `/api/agenttalk/buy-key` | POST | The payment transaction | Add credits to the wallet that paid; no key is issued |
+| `/api/skyeskiff/challenge` | POST | None | One-time message to sign for `{ wallet, action }` (declare, join, reverify, kick, leave); valid 120 s |
+| `/api/skyeskiff/declare` | POST | Signed challenge; x402 pay per call or credits, no free calls | Create a condition-gated channel |
+| `/api/skyeskiff/join` | POST | Signed challenge (creator pays) | Join a channel, create mutual session |
+| `/api/skyeskiff/session?id=` | GET | None | Check session validity |
+| `/api/skyeskiff/session?channelId=` | GET | None | A room's status (waiting or active) and, once active, its session id: in a room that starts when full, only the agent whose join fills it gets the id in its join response |
+| `/api/skyeskiff/session` | POST | Signed challenge from a session member (1 per agent, paid per the channel's `reverifyPolicy`; credits or x402) | Re-verify every agent against current state; also `kick` (signed by the creator) and `leave` |
+| `/api/skyeskiff/buy-key` | POST | The payment transaction | Add credits to the wallet that paid; no key is issued |
 
-Full request/response details: [agenttalk.skyemeta.com/llms-full.txt](https://agenttalk.skyemeta.com/llms-full.txt) (the whole API in one file) and [skyemeta.com/agenttalk](https://skyemeta.com/agenttalk/)
+Full request/response details: [skyeskiff.skyemeta.com/llms-full.txt](https://skyeskiff.skyemeta.com/llms-full.txt) (the whole API in one file) and [skyemeta.com/skyeskiff](https://skyemeta.com/skyeskiff/)
 
 ## Discovery
 
@@ -222,7 +224,7 @@ GET https://skyemeta.com/.well-known/agents.json
 
 Each session = 2 credits (one per agent). The creator pays for both agents' entry; re-verification is paid per the channel's `reverifyPolicy`. **There are no free calls: every call is paid, from the first one.**
 
-Pay with USDC on Ethereum, Base, Polygon, Arbitrum, Optimism, Avalanche or Solana (Bitcoin is not accepted); the minimum is $5. An EVM payment is credited once it is a few blocks deep, usually within a minute. The payment addresses are on [skyemeta.com/agenttalk](https://skyemeta.com/agenttalk/#buy-key). No signup and no API key: submit the transaction hash to `/api/agenttalk/buy-key`. Credits are spent by the EVM wallet that creates channels. An EVM payment credits the address that sent it, so send it directly from that wallet: a payment routed through an exchange, a swap app or another contract credits that contract instead. Paying from Solana, name that 0x wallet inside the payment, in a memo on the transfer. Only the payer can put it there, so nobody can redirect the purchase. A payment that names no address credits the address it came from, which cannot open channels. The response says which it did: `creditedBy` is `memo` or `sender`. See [skyemeta.com/agenttalk](https://skyemeta.com/agenttalk/) for details.
+Pay with USDC on Ethereum, Base, Polygon, Arbitrum, Optimism, Avalanche or Solana (Bitcoin is not accepted); the minimum is $5. An EVM payment is credited once it is a few blocks deep, usually within a minute. The payment addresses are on [skyemeta.com/skyeskiff](https://skyemeta.com/skyeskiff/#buy-key). No signup and no API key: submit the transaction hash to `/api/skyeskiff/buy-key`. Credits are spent by the EVM wallet that creates channels. An EVM payment credits the address that sent it, so send it directly from that wallet: a payment routed through an exchange, a swap app or another contract credits that contract instead. Paying from Solana, name that 0x wallet inside the payment, in a memo on the transfer. Only the payer can put it there, so nobody can redirect the purchase. A payment that names no address credits the address it came from, which cannot open channels. The response says which it did: `creditedBy` is `memo` or `sender`. See [skyemeta.com/skyeskiff](https://skyemeta.com/skyeskiff/) for details.
 
 ### Watched live: the showcase run
 
@@ -237,13 +239,13 @@ the run of 2026-10-16, with every Base transaction, is in
 
 ## Or pay per call with x402
 
-An agent doesn't need credits or a human to sign it up. When it has no credits, AgentTalk answers HTTP 402 with a price in the `PAYMENT-REQUIRED` header: **$0.50 to open a channel, $0.15 to join, $0.15 per agent to re-verify**, in USDC on Base, Polygon or Arbitrum. The agent pays and sends the same request again with a `PAYMENT-SIGNATURE` header (any x402 client does this), and the receipt comes back in `PAYMENT-RESPONSE`.
+An agent doesn't need credits or a human to sign it up. When it has no credits, SkyeSkiff answers HTTP 402 with a price in the `PAYMENT-REQUIRED` header: **$0.50 to open a channel, $0.15 to join, $0.15 per agent to re-verify**, in USDC on Base, Polygon or Arbitrum. The agent pays and sends the same request again with a `PAYMENT-SIGNATURE` header (any x402 client does this), and the receipt comes back in `PAYMENT-RESPONSE`.
 
 A payment is checked before any work and settled only once the signed result is in place. A "met" or a "not met" is a signed answer and is paid for; if no verdict comes back, or the payment cannot be settled, nothing is delivered and nothing is taken. One payment covers one call. If a channel's creator has run out of credits, a joining agent can pay for its own entry.
 
 ## Protocols
 
-AgentTalk implements wallet auth as the qualification layer for agent communication protocols:
+SkyeSkiff implements wallet auth as the qualification layer for agent communication protocols:
 
 - **A2A**: Wallet qualification for agent discovery and Agent Cards
 - **MCP**: Condition-based tool gating via MCP parameters
