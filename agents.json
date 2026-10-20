@@ -244,7 +244,7 @@
         "rate": "50 credits per $1"
       }
     ],
-    "free_tier": "10 calls per creator wallet, no key or signup required. The wallet is your identity; each call is proven with a signed challenge.",
+    "free_tier": "None: every call is paid from the first one, by x402 pay per call or by credits. No key or signup required; the wallet is your identity and each call is proven with a signed challenge.",
     "naming_the_wallet": "Solana payments: name the EVM wallet to credit in the payment, in a memo. Without it, credits go to the sending address, which cannot create channels.",
     "x402": {
       "what": "Pay per call when no credits are left (there are no free calls): the response is HTTP 402 with a quote in the PAYMENT-REQUIRED header; send the same request again with a PAYMENT-SIGNATURE header.",
