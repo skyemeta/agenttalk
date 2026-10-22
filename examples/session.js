@@ -14,9 +14,10 @@
  * and expires after 120 seconds.
  *
  * Wallets: by default this generates fresh, throwaway keypairs. The signature is
- * accepted, but a fresh wallet holds nothing, so the demo stops at the condition
- * gate. To complete a full session, supply two different wallets you control that
- * each hold at least 1 USDC on Ethereum:
+ * accepted, but a fresh wallet has no credits, so the first call answers 402 with
+ * its price and the demo stops there (this script does not pay over x402). To
+ * complete a full session, supply two different wallets you control that each hold
+ * at least 1 USDC on Ethereum, with credits on wallet A (it pays for the join too):
  *
  *     DEMO_PRIVATE_KEY_A=0xKEY_A DEMO_PRIVATE_KEY_B=0xKEY_B node session.js
  *
@@ -95,7 +96,7 @@ async function reverifySession(sessionId, member) {
 function explainRefusal(label, res) {
   const { status, data } = res;
   if (status === 403 && data.pass === false) {
-    console.log(`\nNot admitted (${label}): a condition is not met (expected for a fresh throwaway wallet).`);
+    console.log(`\nNot admitted (${label}): a condition is not met.`);
   } else if (status === 400) {
     console.log(`\nConditions rejected (${label}): ${data.error}. Nothing was charged.`);
   } else if (status === 502 || status === 503) {
@@ -103,7 +104,7 @@ function explainRefusal(label, res) {
   } else if (status === 401) {
     console.log(`\nProof-of-control rejected (${label}): ${data.error}. Request a new challenge and sign again.`);
   } else if (status === 402) {
-    console.log(`\nPayment needed (${label}): pay this call with any x402 client (price in the PAYMENT-REQUIRED header), or buy credits via /buy-key.`);
+    console.log(`\nPayment needed (${label}): pay this call with any x402 client (price in the PAYMENT-REQUIRED header), or buy credits via /buy-key. (Expected for a fresh throwaway wallet.)`);
   } else {
     console.log(`\n${label} failed with HTTP ${status}: ${data.error || JSON.stringify(data)}`);
   }

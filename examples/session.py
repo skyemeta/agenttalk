@@ -14,9 +14,10 @@ and signs it with its wallet key (EIP-191). The challenge is good for one action
 and expires after 120 seconds.
 
 Wallets: by default this generates fresh, throwaway keypairs. The signature is
-accepted, but a fresh wallet holds nothing, so the demo stops at the condition
-gate. To complete a full session, supply two different wallets you control that
-each hold at least 1 USDC on Ethereum:
+accepted, but a fresh wallet has no credits, so the first call answers 402 with
+its price and the demo stops there (this script does not pay over x402). To
+complete a full session, supply two different wallets you control that each hold
+at least 1 USDC on Ethereum, with credits on wallet A (it pays for the join too):
 
     DEMO_PRIVATE_KEY_A=0xKEY_A DEMO_PRIVATE_KEY_B=0xKEY_B python session.py
 
@@ -122,7 +123,7 @@ def explain_refusal(label: str, resp: requests.Response) -> None:
     """
     status, data = resp.status_code, body_of(resp)
     if status == 403 and data.get("pass") is False:
-        print(f"\nNot admitted ({label}): a condition is not met (expected for a fresh throwaway wallet).")
+        print(f"\nNot admitted ({label}): a condition is not met.")
     elif status == 400:
         print(f"\nConditions rejected ({label}): {data.get('error')}. Nothing was charged.")
     elif status in (502, 503):
@@ -131,7 +132,7 @@ def explain_refusal(label: str, resp: requests.Response) -> None:
         print(f"\nProof-of-control rejected ({label}): {data.get('error')}. "
               "Request a new challenge and sign again.")
     elif status == 402:
-        print(f"\nPayment needed ({label}): pay this call with any x402 client (price in the PAYMENT-REQUIRED header), or buy credits via /buy-key.")
+        print(f"\nPayment needed ({label}): pay this call with any x402 client (price in the PAYMENT-REQUIRED header), or buy credits via /buy-key. (Expected for a fresh throwaway wallet.)")
     else:
         print(f"\n{label} failed with HTTP {status}: {data.get('error') or resp.text}")
 

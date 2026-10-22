@@ -14,9 +14,11 @@
 # and expires after 120 seconds.
 #
 # Wallets: by default this generates fresh, throwaway keypairs (cast wallet new).
-# The signature is accepted, but a fresh wallet holds nothing, so the demo stops
-# at the condition gate. To complete a full session, supply two different wallets
-# you control that each hold at least 1 USDC on Ethereum:
+# The signature is accepted, but a fresh wallet has no credits, so the first call
+# answers 402 with its price and the demo stops there (this script does not pay
+# over x402). To complete a full session, supply two different wallets you control
+# that each hold at least 1 USDC on Ethereum, with credits on wallet A (it pays
+# for the join too):
 #
 #     DEMO_PRIVATE_KEY_A=0xKEY_A DEMO_PRIVATE_KEY_B=0xKEY_B ./session.sh
 #
@@ -59,14 +61,14 @@ explain_refusal() {
   case "$STATUS" in
     403)
       if [ "$(json_field "$BODY" pass)" = "False" ]; then
-        echo "Not admitted ($1): a condition is not met (expected for a fresh throwaway wallet)."
+        echo "Not admitted ($1): a condition is not met."
       else
         echo "$1 refused (HTTP 403): $(json_field "$BODY" error)"
       fi ;;
     400) echo "Conditions rejected ($1): $(json_field "$BODY" error). Nothing was charged." ;;
     502|503) echo "Verification unavailable ($1). Nothing was charged; retry in a few seconds." ;;
     401) echo "Proof-of-control rejected ($1): $(json_field "$BODY" error). Sign a fresh challenge." ;;
-    402) echo "Payment needed ($1): pay this call with any x402 client (price in the PAYMENT-REQUIRED header), or buy credits via /buy-key." ;;
+    402) echo "Payment needed ($1): pay this call with any x402 client (price in the PAYMENT-REQUIRED header), or buy credits via /buy-key. (Expected for a fresh throwaway wallet.)" ;;
     *)   echo "$1 failed with HTTP $STATUS: check the response above." ;;
   esac
 }

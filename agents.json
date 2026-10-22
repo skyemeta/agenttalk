@@ -256,10 +256,12 @@
       "networks": [
         "eip155:8453",
         "eip155:137",
-        "eip155:42161"
+        "eip155:42161",
+        "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp"
       ],
       "asset": "USDC",
       "payTo": "0x40f90BD19B6cEc99661F310a1D6b6442825dF3B9",
+      "payTo_solana": "8iw7cTn4yWvUbbsABbdSRuZgED8WC1YjUUT15PRm8QF7",
       "charged": "only for a signed answer, met or not met; no verdict, no charge"
     },
     "confirmations": "EVM payments are credited once a few blocks deep: Ethereum 6, Base and Optimism 10, Arbitrum 20, Polygon 32, Avalanche 1. An earlier claim is told to retry; nothing is used up."
