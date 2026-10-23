@@ -166,7 +166,14 @@ Use `"native"` as the `contractAddress` for ETH, BNB, POL, SOL, etc. (`token_bal
 { "type": "eas_attestation", "template": "gitcoin_passport_score" }
 ```
 
-Up to 10 conditions per channel. All must pass (AND logic). 34 blockchains: 31 EVM chains (Ethereum, Polygon, Base, Arbitrum, Optimism, Avalanche, BNB Chain and 24 more) plus Solana, Sui and Tron.
+**`farcaster_id`**: Is the wallet linked to a Farcaster account?
+```json
+{ "type": "farcaster_id" }
+```
+
+SkyeSkiff passes a room's conditions to InsumerAPI unchanged, so any condition type in [InsumerAPI's API reference](https://insumermodel.com/developers/api-reference/) works in a room.
+
+Up to 10 conditions per channel. All must pass (AND logic). 34 blockchains: 31 EVM chains (Ethereum, Polygon, Base, Arbitrum, Optimism, Avalanche, BNB Chain and 24 more) plus Solana, Sui and Tron. The full list with chain IDs is at [skyemeta.com/skyeskiff/#chains](https://skyemeta.com/skyeskiff/#chains). NFT conditions work on all of them except Tron and Sui.
 
 A condition on Solana, Sui or Tron takes the matching wallet field (`solanaWallet`, `suiWallet`, `tronWallet`) on declare and join. Prove ownership of that wallet first: sign a challenge from `https://skyeskiff.skyemeta.com/api/wallet-proof` (family `solana`, `sui` or `tron`; domain `skyeskiff`) and pass the token in `walletProofs`. XRP Ledger, Bitcoin and Stellar wallets cannot prove ownership and are not accepted.
 
